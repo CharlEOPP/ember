@@ -1,0 +1,44 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "release",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "relwithdebinfo",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "sanitize",
+      "inherits": "debug",
+      "cacheVariables": { "EMBER_SANITIZE": "ON" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug",         "configurePreset": "debug" },
+    { "name": "release",       "configurePreset": "release" },
+    { "name": "relwithdebinfo","configurePreset": "relwithdebinfo" },
+    { "name": "sanitize",      "configurePreset": "sanitize" }
+  ],
+  "testPresets": [
+    { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true } },
+    { "name": "debug",   "configurePreset": "debug",   "output": { "outputOnFailure": true } }
+  ]
+}
