@@ -17,6 +17,15 @@ add_executable(ember_tests
     core/TestLog.cpp
     platform/TestTimer.cpp
     platform/TestFileSystem.cpp
+    # Epic 03 — ECS & Scene
+    events/TestEventBus.cpp
+    events/TestSignal.cpp
+    ecs/TestWorld.cpp
+    ecs/TestScheduler.cpp
+    ecs/TestReflection.cpp
+    ecs/TestPerf.cpp
+    scene/TestHierarchy.cpp
+    serialization/TestSceneSerialization.cpp
 )
 
 target_link_libraries(ember_tests

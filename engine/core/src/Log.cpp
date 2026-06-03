@@ -56,7 +56,9 @@ void Log::setLevel(const std::string& channel, int level) {
         logger->set_level(static_cast<spdlog::level::level_enum>(level));
 }
 
-std::shared_ptr<spdlog::logger>& Log::engineLogger() { return s_engineLogger; }
-std::shared_ptr<spdlog::logger>& Log::gameLogger()   { return s_gameLogger;   }
+// Lazily initialise so logging (including via EMBER_ASSERT/EMBER_VERIFY) is safe
+// even if Log::init() was never called explicitly — e.g. in unit tests.
+std::shared_ptr<spdlog::logger>& Log::engineLogger() { if (!s_engineLogger) init(); return s_engineLogger; }
+std::shared_ptr<spdlog::logger>& Log::gameLogger()   { if (!s_gameLogger)   init(); return s_gameLogger;   }
 
 } // namespace ember

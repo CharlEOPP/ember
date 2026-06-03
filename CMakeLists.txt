@@ -18,6 +18,10 @@ add_subdirectory(third_party/glad)
 # ---- Engine subsystems ----
 add_subdirectory(engine/core)
 add_subdirectory(engine/platform)
+add_subdirectory(engine/events)
+add_subdirectory(engine/ecs)
+add_subdirectory(engine/scene)
+add_subdirectory(engine/serialization)
 add_subdirectory(engine/renderer)
 
 # ---- Aggregate interface target ----
@@ -25,6 +29,10 @@ add_library(ember INTERFACE)
 target_link_libraries(ember INTERFACE
     ember_core
     ember_platform
+    ember_events
+    ember_ecs
+    ember_scene
+    ember_serialization
     ember_renderer_api
 )
 
