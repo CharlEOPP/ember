@@ -55,9 +55,12 @@ TEST_CASE("Pool_SizeTracking", "[pool]") {
 }
 
 TEST_CASE("Pool_FullPoolAsserts", "[pool]") {
+#if defined(NDEBUG)
+    SKIP("EMBER_ASSERT is compiled out in Release builds (NDEBUG)");
+#else
     PoolAllocator<int> pool(2);
-    pool.alloc(1);
-    pool.alloc(2);
+    [[maybe_unused]] int* a = pool.alloc(1);
+    [[maybe_unused]] int* b = pool.alloc(2);
     REQUIRE(pool.size() == 2u);
 
     bool assertFired = false;
@@ -69,4 +72,5 @@ TEST_CASE("Pool_FullPoolAsserts", "[pool]") {
 
     REQUIRE(assertFired);
     REQUIRE(ptr == nullptr);
+#endif
 }

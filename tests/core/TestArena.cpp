@@ -52,6 +52,9 @@ TEST_CASE("Arena_AlignmentCorrect", "[arena]") {
 }
 
 TEST_CASE("Arena_FullArenaAsserts", "[arena]") {
+#if defined(NDEBUG)
+    SKIP("EMBER_ASSERT is compiled out in Release builds (NDEBUG)");
+#else
     ArenaAllocator arena(8);
     // Fill the arena completely
     arena.allocRaw(8, 1);
@@ -67,4 +70,5 @@ TEST_CASE("Arena_FullArenaAsserts", "[arena]") {
 
     REQUIRE(assertFired);
     REQUIRE(ptr == nullptr);
+#endif
 }

@@ -30,7 +30,7 @@ TEST_CASE("FS_ExistsReturnsTrueForReal", "[filesystem]") {
     std::filesystem::create_directories(kTmpDir);
     const auto path = kTmpDir / "exists.txt";
     std::filesystem::remove(path);
-    FileSystem::writeTextFile(path, "x");
+    REQUIRE(FileSystem::writeTextFile(path, "x").has_value());
     REQUIRE(FileSystem::exists(path));
     std::filesystem::remove(path);
 }

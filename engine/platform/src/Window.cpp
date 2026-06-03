@@ -36,10 +36,16 @@ void Window::init(const WindowSpec& spec) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #if defined(EMBER_PLATFORM_MACOS)
+    // macOS caps OpenGL at 4.1 core and has no KHR_debug.
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 #else
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1); // 4.1 for broadest compatibility
+    // 4.3 makes KHR_debug part of core, so glDebugMessageCallback works.
+    // (On a 4.1 context it's only an extension and enabling it errors.)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    #if !defined(NDEBUG)
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+    #endif
 #endif
 
     m_window = glfwCreateWindow(
@@ -58,8 +64,19 @@ void Window::init(const WindowSpec& spec) {
     glfwSetWindowUserPointer(m_window, this);
     setVSync(spec.vsync);
 
+    // Store the real framebuffer size in PIXELS (may differ from the requested
+    // size on HiDPI / scaled displays). The viewport must use pixels, not the
+    // window's screen-coordinate size.
+    {
+        int fbW = 0, fbH = 0;
+        glfwGetFramebufferSize(m_window, &fbW, &fbH);
+        m_state.width  = static_cast<u32>(fbW);
+        m_state.height = static_cast<u32>(fbH);
+    }
+
     // ---- GLFW callbacks ----
-    glfwSetWindowSizeCallback(m_window, [](GLFWwindow* w, int width, int height) {
+    // Framebuffer-size (pixels), NOT window-size (screen coords) — correct on HiDPI.
+    glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* w, int width, int height) {
         auto& self = *static_cast<Window*>(glfwGetWindowUserPointer(w));
         self.m_state.width  = static_cast<u32>(width);
         self.m_state.height = static_cast<u32>(height);

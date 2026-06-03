@@ -5,7 +5,9 @@ if(NOT TARGET Catch2::Catch2WithMain)
 endif()
 
 include(CTest)
-include(Catch2/extras/Catch.cmake)
+# Catch2 (via FetchContent) adds its extras/ dir to CMAKE_MODULE_PATH,
+# so the Catch module is included by name, not by relative path.
+include(Catch)
 
 add_executable(ember_tests
     core/TestUUID.cpp
@@ -24,4 +26,6 @@ target_link_libraries(ember_tests
 )
 
 ember_set_compiler_options(ember_tests)
-catch_discover_tests(ember_tests)
+# Catch2 returns exit code 4 when all run test cases were skipped (SKIP()).
+# Map that to a CTest "skipped" result so Release-only skips don't fail the run.
+catch_discover_tests(ember_tests PROPERTIES SKIP_RETURN_CODE 4)

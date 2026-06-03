@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>   // Catch::Approx lives in its own header in Catch2 v3
 #include "ember/platform/Timer.h"
 #include <thread>
 #include <chrono>

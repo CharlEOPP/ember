@@ -68,21 +68,26 @@ FetchContent_Declare(imgui
 )
 
 # ---- stb — image / font loading ----
+# NOTE: pinned to a raw commit SHA, so GIT_SHALLOW must stay OFF
+# (a shallow fetch only grabs the branch tip and can't check out an old SHA).
 FetchContent_Declare(stb
     GIT_REPOSITORY https://github.com/nothings/stb.git
     GIT_TAG        5736b15f7ea0ffb08dd38af21067c314d6a3aae9
-    GIT_SHALLOW    TRUE
 )
 
 # Fetch everything (CMake parallelises the downloads)
 FetchContent_MakeAvailable(glfw glm EnTT spdlog yaml-cpp Catch2)
 
-# stb and imgui are consumed via SYSTEM includes — just populate
-FetchContent_Populate(stb   QUIET)
-FetchContent_Populate(imgui QUIET)
+# stb and imgui have no CMakeLists.txt, so MakeAvailable just populates them
+# (no add_subdirectory) and still sets stb_SOURCE_DIR / imgui_SOURCE_DIR.
+FetchContent_MakeAvailable(stb imgui)
 
 # Expose stb include path as a variable for targets that need it
 set(STB_INCLUDE_DIR "${stb_SOURCE_DIR}" CACHE PATH "stb include directory" FORCE)
 set(IMGUI_SOURCE_DIR "${imgui_SOURCE_DIR}" CACHE PATH "ImGui source directory" FORCE)
+
+# Prevent glfw3.h from including the system OpenGL header; we use glad as the
+# sole GL loader. Without this, MinGW's <GL/gl.h> clashes with glad/gl.h.
+target_compile_definitions(glfw INTERFACE GLFW_INCLUDE_NONE)
 
 message(STATUS "Ember: Dependencies ready")

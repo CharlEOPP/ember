@@ -22,7 +22,8 @@ int main() {
     // ---- OpenGL context ----
     ember::RHI::init(ember::RHIBackend::OpenGL);
     ember::RHI::setClearColor(0.1f, 0.1f, 0.15f);
-    ember::RHI::setViewport(0, 0, spec.width, spec.height);
+    // Use the real framebuffer size (pixels) — correct on HiDPI / scaled displays.
+    ember::RHI::setViewport(0, 0, window->getWidth(), window->getHeight());
 
     // ---- Hard-coded triangle (NDC) ----
     // Vertex layout: position only (x, y, z)
@@ -62,7 +63,7 @@ int main() {
         if (e.getType() == ember::EventType::WindowResize) {
             auto& re = static_cast<ember::WindowResizeEvent&>(e);
             ember::RHI::setViewport(0, 0, re.width, re.height);
-            EMBER_LOG_INFO("Window resized: {}x{}", re.width, re.height);
+            EMBER_LOG_DEBUG("Window resized: {}x{}", re.width, re.height);
         }
     });
 
