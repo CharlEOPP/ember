@@ -30,7 +30,7 @@ TEST_CASE("UUID_IsThreadSafe", "[uuid]") {
     std::vector<std::thread> threads;
     threads.reserve(T);
     for (int t = 0; t < T; ++t) {
-        threads.emplace_back([&results, t, N]() {
+        threads.emplace_back([&results, t]() {  // N is constexpr -> no capture needed
             for (int i = 0; i < N; ++i)
                 results[static_cast<std::size_t>(t * N + i)] = generateUUID();
         });
