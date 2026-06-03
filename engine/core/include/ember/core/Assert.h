@@ -27,7 +27,7 @@ void invoke(const char* expr, const char* file, int line, const char* msg);
 #  define EMBER_ASSERT(cond, fmt, ...)                                                \
      do {                                                                              \
          if (!(cond)) {                                                                \
-             EMBER_LOG_ERROR("Assertion failed: ({}) -- " fmt, #cond, ##__VA_ARGS__);\
+             EMBER_LOG_ERROR("Assertion failed: ({}) -- " fmt, #cond __VA_OPT__(,) __VA_ARGS__);\
              ::ember::Assert::invoke(#cond, __FILE__, __LINE__, fmt);                 \
          }                                                                             \
      } while(0)
@@ -39,7 +39,7 @@ void invoke(const char* expr, const char* file, int line, const char* msg);
 #define EMBER_VERIFY(cond, fmt, ...)                                                  \
     do {                                                                               \
         if (!(cond)) {                                                                 \
-            EMBER_LOG_ERROR("Verify failed: ({}) -- " fmt, #cond, ##__VA_ARGS__);    \
+            EMBER_LOG_ERROR("Verify failed: ({}) -- " fmt, #cond __VA_OPT__(,) __VA_ARGS__);    \
             ::ember::Assert::invoke(#cond, __FILE__, __LINE__, fmt);                  \
         }                                                                              \
     } while(0)

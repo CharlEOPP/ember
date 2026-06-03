@@ -37,11 +37,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Ninja (Ubuntu)
+      - name: Install build deps (Ubuntu)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y ninja-build gcc-13 g++-13
+          # GLFW 3.4 builds X11 + Wayland backends on Linux and needs their dev headers.
+          sudo apt-get install -y ninja-build gcc-13 g++-13 \
+            xorg-dev libxkbcommon-dev libwayland-dev wayland-protocols extra-cmake-modules
 
       - name: Install Ninja (macOS)
         if: runner.os == 'macOS'
