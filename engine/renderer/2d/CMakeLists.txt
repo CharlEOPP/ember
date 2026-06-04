@@ -21,3 +21,13 @@ target_link_libraries(ember_renderer_2d
 
 target_compile_features(ember_renderer_2d PUBLIC cxx_std_20)
 ember_set_compiler_options(ember_renderer_2d)
+
+# stb is third-party: compile its implementation TU with warnings off so the
+# engine's -Werror doesn't choke on stb's known GCC false-positives (e.g.
+# -Wstringop-overflow in the PNG parser at -O3).
+if(MSVC)
+    set_source_files_properties(loaders/stb_impl.cpp PROPERTIES COMPILE_OPTIONS "/w")
+else()
+    set_source_files_properties(loaders/stb_impl.cpp PROPERTIES COMPILE_OPTIONS "-w")
+endif()
+
