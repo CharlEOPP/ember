@@ -1,4 +1,5 @@
 #include "ViewportPanel.h"
+#include "../Picking.h"
 
 #include "ember/renderer/Renderer2D.h"
 #include "ember/scene/Scene.h"
@@ -89,6 +90,16 @@ void ViewportPanel::onImGuiRender(EditorContext& ctx, f32 dt, bool playing) {
                      ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));   // flip V (GL origin)
     }
     m_hovered = ImGui::IsItemHovered();
+
+    // Left-click (no drag) picks the entity under the cursor.
+    if (!playing && ctx.scene && ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        const ImVec2 mn = ImGui::GetItemRectMin();
+        const ImVec2 mp = ImGui::GetMousePos();
+        const glm::vec2 local{mp.x - mn.x, mp.y - mn.y};
+        ctx.selected = Picking::pick(ctx.scene->world(), m_camera.viewProjection(),
+                                     glm::vec2(static_cast<f32>(m_fbW), static_cast<f32>(m_fbH)), local);
+    }
+
     if (!playing) handleCameraInput();   // game owns input while playing
 
     // Overlay: renderer stats (top-left of the image).

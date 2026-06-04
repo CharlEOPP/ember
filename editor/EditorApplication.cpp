@@ -49,6 +49,7 @@ EditorApplication::EditorApplication()
     registerEditorInspectors();
 
     m_input.init(*m_window);   // becomes the active manager for the Input:: facade
+    m_assetBrowser.setOpenSceneCallback([this](const std::string& path) { openSceneFile(path); });
 
     m_imgui.init(*m_window);
     EMBER_LOG_INFO("Ember Editor initialised");
@@ -172,11 +173,7 @@ void EditorApplication::drawPanels(f32 dt) {
     m_viewport.onImGuiRender(m_ctx, dt, m_play.isPlaying());
     m_hierarchy.onImGuiRender(m_ctx);
     m_inspector.onImGuiRender(m_ctx);
-
-    // Remaining placeholder panel — replaced by the real panel in Phase 8.
-    ImGui::Begin("Assets");
-    ImGui::TextUnformatted("Asset browser (Phase 8).");
-    ImGui::End();
+    m_assetBrowser.onImGuiRender(m_ctx);
 }
 
 void EditorApplication::handleShortcuts() {

@@ -46,7 +46,15 @@ static bool drawSpriteRenderer(World& w, Entity e) {
     char buf[256];
     std::snprintf(buf, sizeof(buf), "%s", s.texturePath.c_str());
     if (ImGui::InputText("texture", buf, sizeof(buf))) { s.texturePath = buf; changed = true; }
-    // (Phase 8: an Asset Browser drag-drop target also assigns this.)
+    // Drop a file from the Asset Browser to assign the texture path.
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("EMBER_ASSET_PATH")) {
+            s.texturePath = static_cast<const char*>(p->Data);
+            s.texture = {};   // clear the resolved handle so it reloads from the new path
+            changed = true;
+        }
+        ImGui::EndDragDropTarget();
+    }
     changed |= ImGui::ColorEdit4("color", &s.color.x);
     changed |= ImGui::DragInt("layer", &s.layer);
     changed |= ImGui::Checkbox("flipX", &s.flipX); ImGui::SameLine();

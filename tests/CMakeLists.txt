@@ -44,11 +44,17 @@ add_executable(ember_tests
     renderer/TestSpriteAnimation.cpp
     renderer/TestTilemap.cpp
     renderer/TestParticles.cpp
+    # Epic 07 — Editor (ImGui-free logic via ember_editor_core)
+    editor/TestCommandHistory.cpp
+    editor/TestSceneCommands.cpp
+    editor/TestPicking.cpp
+    editor/TestInspectorModel.cpp
 )
 
 target_link_libraries(ember_tests
     PRIVATE
         ember
+        ember_editor_core   # Epic 07 editor logic (ImGui-free) + its include dir
         Catch2::Catch2WithMain
         # scripting tests include RegisterScript.h (registerComponentType → yaml);
         # yaml-cpp is PRIVATE in serialization so it isn't propagated transitively.

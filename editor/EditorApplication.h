@@ -9,6 +9,7 @@
 #include "panels/ViewportPanel.h"
 #include "panels/SceneHierarchyPanel.h"
 #include "panels/InspectorPanel.h"
+#include "panels/AssetBrowserPanel.h"
 #include "ember/input/InputManager.h"
 
 #include <memory>
@@ -64,6 +65,7 @@ private:
     ViewportPanel                m_viewport;
     SceneHierarchyPanel          m_hierarchy;
     InspectorPanel               m_inspector;
+    AssetBrowserPanel            m_assetBrowser;
     FileBrowser                  m_fileBrowser;
 };
 
