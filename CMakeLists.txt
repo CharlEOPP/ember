@@ -54,6 +54,7 @@ target_link_libraries(ember INTERFACE
 
 # ---- Applications ----
 add_subdirectory(sandbox)
+add_subdirectory(editor)   # self-guards when GLFW/ImGui are unavailable
 
 # ---- Tests ----
 enable_testing()
