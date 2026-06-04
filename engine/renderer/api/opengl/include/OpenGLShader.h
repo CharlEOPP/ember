@@ -18,6 +18,7 @@ public:
     void setVec2    (const std::string& name, f32 x, f32 y)                  override;
     void setVec3    (const std::string& name, f32 x, f32 y, f32 z)           override;
     void setVec4    (const std::string& name, f32 x, f32 y, f32 z, f32 w)    override;
+    void setMat3    (const std::string& name, const f32* mat3ptr)             override;
     void setMat4    (const std::string& name, const f32* mat4ptr)             override;
     void setIntArray(const std::string& name, const i32* values, u32 count)  override;
 

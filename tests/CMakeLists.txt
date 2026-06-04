@@ -26,6 +26,9 @@ add_executable(ember_tests
     ecs/TestPerf.cpp
     scene/TestHierarchy.cpp
     serialization/TestSceneSerialization.cpp
+    # Epic 04 — 2D Renderer (CPU-only: layout, shader parse, atlas, camera)
+    renderer/TestRenderer2D.cpp
+    renderer/TestCamera.cpp
 )
 
 target_link_libraries(ember_tests

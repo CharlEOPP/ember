@@ -34,6 +34,7 @@ target_link_libraries(ember INTERFACE
     ember_scene
     ember_serialization
     ember_renderer_api
+    ember_renderer_2d
 )
 
 # ---- Applications ----

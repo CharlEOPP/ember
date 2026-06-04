@@ -93,6 +93,9 @@ void OpenGLShader::setVec4(const std::string& name, f32 x, f32 y, f32 z, f32 w) 
     const f32 v[] = {x, y, z, w};
     glUniform4fv(getUniformLocation(name), 1, v);
 }
+void OpenGLShader::setMat3(const std::string& name, const f32* ptr) {
+    glUniformMatrix3fv(getUniformLocation(name), 1, GL_FALSE, ptr);
+}
 void OpenGLShader::setMat4(const std::string& name, const f32* ptr) {
     glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, ptr);
 }

@@ -2,6 +2,8 @@
 #include "OpenGLBuffer.h"
 #include "OpenGLShader.h"
 #include "OpenGLVertexArray.h"
+#include "OpenGLTexture2D.h"
+#include "OpenGLFramebuffer.h"
 #include "ember/core/Log.h"
 #include "ember/core/Assert.h"
 
@@ -67,11 +69,31 @@ std::shared_ptr<IShader> RHI::createShader(const std::string& vertSrc, const std
     return shader;
 }
 
-std::shared_ptr<ITexture2D> RHI::createTexture2D([[maybe_unused]] const TextureSpec& spec,
-                                                   [[maybe_unused]] const void* pixels) {
-    // Texture2D implementation deferred to Epic 04 (Renderer 2D)
-    EMBER_ASSERT(false, "RHI::createTexture2D not yet implemented");
-    return nullptr;
+std::shared_ptr<IVertexBuffer> RHI::createVertexBuffer(u32 sizeBytes) {
+    return std::make_shared<OpenGLVertexBuffer>(sizeBytes);
+}
+
+std::shared_ptr<IVertexArray> RHI::createVertexArray() {
+    return std::make_shared<OpenGLVertexArray>();
+}
+
+std::shared_ptr<ITexture2D> RHI::createTexture2D(const TextureSpec& spec, const void* pixels) {
+    return std::make_shared<OpenGLTexture2D>(spec, pixels);
+}
+
+std::shared_ptr<IFramebuffer> RHI::createFramebuffer(const FramebufferSpec& spec) {
+    return std::make_shared<OpenGLFramebuffer>(spec);
+}
+
+std::shared_ptr<ITexture2D> RHI::whiteTexture() {
+    static std::shared_ptr<ITexture2D> s_white;
+    if (!s_white) {
+        TextureSpec spec;
+        spec.width = 1; spec.height = 1; spec.format = TextureFormat::RGBA8;
+        const u32 pixel = 0xFFFFFFFFu;   // opaque white
+        s_white = std::make_shared<OpenGLTexture2D>(spec, &pixel);
+    }
+    return s_white;
 }
 
 // ---- Draw commands ----
@@ -85,26 +107,47 @@ void RHI::setClearColor(f32 r, f32 g, f32 b, f32 a) {
     glClearColor(r, g, b, a);
 }
 
+void RHI::setBlend(bool enabled) {
+    if (enabled) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    } else {
+        glDisable(GL_BLEND);
+    }
+}
+
 void RHI::clear() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void RHI::drawIndexed(const std::shared_ptr<IVertexArray>& vao, u32 indexCount) {
+    vao->bind();
+    const u32 count = indexCount ? indexCount : vao->indexCount();
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(count), GL_UNSIGNED_INT, nullptr);
+    vao->unbind();
+}
+
+void RHI::drawLines(const std::shared_ptr<IVertexArray>& vao, u32 vertexCount) {
+    vao->bind();
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(vertexCount));
+    vao->unbind();
 }
 
 void RHI::drawIndexed(const std::shared_ptr<IVertexBuffer>& vbo,
                       const std::shared_ptr<IIndexBuffer>&  ibo,
                       u32 indexCount)
 {
-    // For simplicity in Epic 02 we create a transient VAO each call.
-    // Epic 04 (Renderer2D) will cache VAOs per vertex layout.
-    OpenGLVertexArray vao;
-    // Position only: 3 floats, location 0
-    vao.attachVertexBuffer(vbo, 0, 3, sizeof(f32) * 3, 0);
-    vao.attachIndexBuffer(ibo);
-    vao.bind();
+    // Legacy path (Epic 02 triangle): ensure a default position layout, then draw
+    // through the layout-aware VAO.
+    if (vbo->getLayout().empty())
+        const_cast<IVertexBuffer&>(*vbo).setLayout({ { ShaderDataType::Float3, "a_Position" } });
 
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount),
-                   GL_UNSIGNED_INT, nullptr);
-
-    vao.unbind();
+    auto vao = std::make_shared<OpenGLVertexArray>();
+    vao->addVertexBuffer(vbo);
+    vao->setIndexBuffer(ibo);
+    vao->bind();
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, nullptr);
+    vao->unbind();
 }
 
 } // namespace ember

@@ -1,8 +1,12 @@
 add_library(ember_renderer_api STATIC
+    src/RHILayout.cpp
+    src/ShaderLibrary.cpp
     opengl/src/OpenGLContext.cpp
     opengl/src/OpenGLBuffer.cpp
     opengl/src/OpenGLShader.cpp
     opengl/src/OpenGLVertexArray.cpp
+    opengl/src/OpenGLTexture2D.cpp
+    opengl/src/OpenGLFramebuffer.cpp
 )
 
 target_include_directories(ember_renderer_api
