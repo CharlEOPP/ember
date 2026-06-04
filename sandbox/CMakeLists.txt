@@ -1,6 +1,14 @@
-add_executable(ember_sandbox main.cpp)
+add_executable(ember_sandbox
+    main.cpp
+    scripts/Scripts.cpp        # registers sandbox scripts (pulls yaml via RegisterScript.h)
+)
 
-target_link_libraries(ember_sandbox PRIVATE ember)
+target_include_directories(ember_sandbox PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# ember provides the engine; yaml-cpp is needed by scripts/Scripts.cpp because
+# script registration instantiates the serializer (yaml is PRIVATE in the
+# serialization lib, so it isn't propagated through the aggregate).
+target_link_libraries(ember_sandbox PRIVATE ember yaml-cpp::yaml-cpp)
 
 ember_set_compiler_options(ember_sandbox)
 

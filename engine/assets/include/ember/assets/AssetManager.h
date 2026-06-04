@@ -32,7 +32,13 @@ public:
     template<typename T>
     void registerLoader(std::shared_ptr<IAssetLoader<T>> loader) {
         std::lock_guard<std::mutex> lk(m_mutex);
-        m_loaders[std::type_index(typeid(T))] = std::move(loader);
+        const auto ti = std::type_index(typeid(T));
+        m_loaders[ti] = std::move(loader);
+        // Type-erased load-by-path, so the serializer can resolve AssetHandle<T>
+        // fields from a virtual path without knowing T at the call site.
+        m_loadByType[ti] = [](AssetManager& m, const std::string& path) -> u64 {
+            return m.load<T>(path).id;
+        };
     }
 
     // Synchronous load. Cached (type, path) ⇒ bump refcount and return; else run
@@ -132,6 +138,13 @@ public:
     [[nodiscard]] usize liveCount() const;
     [[nodiscard]] u32   refCount(u64 id) const;
 
+    // ---- Serialization support (handle <-> virtual path) ----
+    // Virtual path backing a handle id, or "" if unknown.
+    [[nodiscard]] std::string pathOf(u64 id) const;
+    // Load `path` as the type registered under `type`, returning the handle id
+    // (0 if no loader for that type). Used to resolve serialized AssetHandle<T>.
+    u64 loadByType(std::type_index type, const std::string& path);
+
 private:
     struct Entry {
         std::type_index type;
@@ -189,6 +202,7 @@ private:
     std::unordered_map<u64, Entry>          m_entries;
     std::unordered_map<std::string, u64>    m_byKey;
     std::unordered_map<std::type_index, std::shared_ptr<void>> m_loaders;
+    std::unordered_map<std::type_index, std::function<u64(AssetManager&, const std::string&)>> m_loadByType;
     u64 m_nextId = 1;
 
     ThreadPool m_pool;

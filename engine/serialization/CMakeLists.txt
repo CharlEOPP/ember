@@ -9,8 +9,10 @@ target_include_directories(ember_serialization
 )
 
 # yaml-cpp is PRIVATE so it never leaks into consumers' include paths (NFR-04).
+# ember_assets is PUBLIC for ember/assets/AssetHandle.h (header-only), used by the
+# AssetHandle<T> field (de)serialization overloads in ComponentSerialization.h.
 target_link_libraries(ember_serialization
-    PUBLIC  ember_core ember_ecs ember_scene
+    PUBLIC  ember_core ember_ecs ember_scene ember_assets
     PRIVATE yaml-cpp::yaml-cpp
 )
 

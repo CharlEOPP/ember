@@ -32,12 +32,18 @@ add_executable(ember_tests
     # Epic 05 — Input & Assets (CPU-only: edge states, action map, context)
     input/TestInputState.cpp
     assets/TestAssetManager.cpp
+    # Epic 06 — Scripting (CPU-only: lifecycle, order, serialization)
+    scripting/TestScriptLifecycle.cpp
+    scripting/TestScriptSerialization.cpp
 )
 
 target_link_libraries(ember_tests
     PRIVATE
         ember
         Catch2::Catch2WithMain
+        # scripting tests include RegisterScript.h (registerComponentType → yaml);
+        # yaml-cpp is PRIVATE in serialization so it isn't propagated transitively.
+        yaml-cpp::yaml-cpp
 )
 
 ember_set_compiler_options(ember_tests)

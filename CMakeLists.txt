@@ -25,6 +25,7 @@ add_subdirectory(engine/serialization)
 add_subdirectory(engine/input)
 add_subdirectory(engine/renderer)
 add_subdirectory(engine/assets)
+add_subdirectory(engine/scripting)
 
 # ---- Aggregate interface target ----
 add_library(ember INTERFACE)
@@ -39,6 +40,7 @@ target_link_libraries(ember INTERFACE
     ember_assets
     ember_renderer_api
     ember_renderer_2d
+    ember_scripting
 )
 
 # ---- Applications ----

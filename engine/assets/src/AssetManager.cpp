@@ -77,6 +77,26 @@ usize AssetManager::liveCount() const {
     return m_entries.size();
 }
 
+std::string AssetManager::pathOf(u64 id) const {
+    std::lock_guard<std::mutex> lk(m_mutex);
+    auto it = m_entries.find(id);
+    return it == m_entries.end() ? std::string{} : it->second.path;
+}
+
+u64 AssetManager::loadByType(std::type_index type, const std::string& path) {
+    std::function<u64(AssetManager&, const std::string&)> fn;
+    {
+        std::lock_guard<std::mutex> lk(m_mutex);
+        auto it = m_loadByType.find(type);
+        if (it == m_loadByType.end()) {
+            EMBER_LOG_WARN("AssetManager::loadByType: no loader for type '{}'", type.name());
+            return 0;
+        }
+        fn = it->second;
+    }
+    return fn(*this, path);   // calls load<T> (re-locks internally)
+}
+
 void AssetManager::evictLocked(u64 id) {
     auto it = m_entries.find(id);
     if (it == m_entries.end()) return;

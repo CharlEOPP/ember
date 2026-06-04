@@ -10,16 +10,45 @@
 #include "ember/ecs/Components.h"
 #include "ember/ecs/ComponentRegistry.h"
 #include "ember/ecs/Reflect.h"
+#include "ember/assets/AssetHandle.h"
 
 #include <entt/entt.hpp>
 #include <glm/glm.hpp>
 #include <yaml-cpp/yaml.h>
 
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+
+namespace ember {
+
+// Lets the serializer map AssetHandle ids <-> virtual paths (handles are runtime
+// ids with no cross-run meaning). The app installs this from its AssetManager
+// (e.g. setAssetSerializationResolver([&m](u64 id){return m.pathOf(id);},
+// [&m](std::type_index t, const std::string& p){return m.loadByType(t,p);})).
+// Unset ⇒ handles serialize as "" / load back null (graceful, SER-03).
+struct AssetSerializationResolver {
+    std::function<std::string(u64)>                           toPath;
+    std::function<u64(std::type_index, const std::string&)>   toHandle;
+};
+
+inline AssetSerializationResolver& assetSerializationResolver() {
+    static AssetSerializationResolver r;
+    return r;
+}
+
+inline void setAssetSerializationResolver(
+        std::function<std::string(u64)> toPath,
+        std::function<u64(std::type_index, const std::string&)> toHandle) {
+    auto& r = assetSerializationResolver();
+    r.toPath   = std::move(toPath);
+    r.toHandle = std::move(toHandle);
+}
+
+} // namespace ember
 
 namespace ember::detail {
 
@@ -50,6 +79,14 @@ struct YAMLWriteVisitor {
         for (Entity e : v) out << idOf(e);
         out << YAML::EndSeq;
     }
+    // Asset handles serialize by their virtual path (resolved via the app's
+    // AssetManager); empty if no resolver / unknown handle.
+    template<typename T>
+    void operator()(const char* n, AssetHandle<T>& v) {
+        key(n);
+        auto& r = assetSerializationResolver();
+        out << (r.toPath ? r.toPath(v.id) : std::string{});
+    }
 };
 
 struct YAMLReadVisitor {
@@ -75,6 +112,15 @@ struct YAMLReadVisitor {
         auto a = node[n];
         v.clear();
         if (a.IsDefined()) for (auto el : a) v.push_back(remap(el.as<std::uint64_t>()));
+    }
+    // Re-resolve an asset handle from its stored virtual path via the app's
+    // AssetManager (load-by-type). Null handle if no resolver / empty path.
+    template<typename T>
+    void operator()(const char* n, AssetHandle<T>& v) {
+        if (!node[n].IsDefined()) return;
+        const std::string path = node[n].as<std::string>();
+        auto& r = assetSerializationResolver();
+        v.id = (r.toHandle && !path.empty()) ? r.toHandle(std::type_index(typeid(T)), path) : 0;
     }
 };
 

@@ -5,11 +5,20 @@
 #include "ember/renderer/Renderer2D.h"
 #include "ember/renderer/Camera.h"
 #include "ember/renderer/DebugDraw.h"
+#include "ember/ecs/Components.h"
+#include "ember/scene/Scene.h"
+#include "ember/input/InputManager.h"
+#include "ember/scripting/ScriptSystem.h"
+
+#include "scripts/Spinner.h"
+#include "scripts/PlayerController.h"
+#include "scripts/Lifetime.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <cmath>
+#include <cstdlib>
 #include <format>
 #include <memory>
 #include <vector>
@@ -32,12 +41,18 @@ static std::shared_ptr<ITexture2D> makeChecker(u32 size, u32 colorA, u32 colorB)
     return RHI::createTexture2D(spec, pixels.data());
 }
 
+static glm::mat4 trsMatrix(const Transform& t) {
+    return glm::translate(glm::mat4(1.0f), t.position)
+         * glm::rotate(glm::mat4(1.0f), t.rotation, glm::vec3(0, 0, 1))
+         * glm::scale(glm::mat4(1.0f), t.scale);
+}
+
 int main() {
     Log::init();
     EMBER_LOG_INFO("Ember initialised");
 
     WindowSpec spec;
-    spec.title  = "Ember Sandbox — 2D Renderer";
+    spec.title  = "Ember Sandbox — Scripting";
     spec.width  = 1280;
     spec.height = 720;
     spec.vsync  = true;
@@ -50,16 +65,18 @@ int main() {
     Renderer2D::init();
     DebugDraw::init();   // no-op in Release builds
 
-    // Editor camera framing a 32x32 grid centred on the origin.
     EditorCamera camera;
     camera.setViewportSize(window->getWidth(), window->getHeight());
     camera.zoom(5.0f - 18.0f);   // half-height -> ~18 world units
 
-    // A few textures so batching uses multiple slots.
     auto white    = RHI::whiteTexture();
-    auto checkerA = makeChecker(8, 0xFFFFFFFFu, 0xFF3060FFu);   // white / red-ish
-    auto checkerB = makeChecker(8, 0xFFFFFFFFu, 0xFF60C040u);   // white / green-ish
-    const std::shared_ptr<ITexture2D> textures[3] = { white, checkerA, checkerB };
+    auto checkerA = makeChecker(8, 0xFFFFFFFFu, 0xFF3060FFu);
+    auto checkerB = makeChecker(8, 0xFFFFFFFFu, 0xFF60C040u);
+
+    // ---- Input: drives PlayerController via the Epic 05 facade ----
+    InputManager input;
+    input.init(*window);
+    input.loadDefaultActionMap();   // "game" context: MoveX/MoveY/Jump
 
     window->setEventCallback([&](platform::Event& e) {
         if (e.getType() == platform::EventType::WindowResize) {
@@ -69,57 +86,63 @@ int main() {
         }
     });
 
-    constexpr int kGrid = 32;   // 32 * 32 = 1024 sprites
+    // ---- Scene + scripts ----
+    Scene scene("sandbox");
+    ScriptSystem scripts(scene);
+
+    // A grid of independently-rotating Spinners (validates throughput, SBX-03).
+    constexpr int kGrid = 22;   // 22*22 = 484 spinners
+    for (int y = 0; y < kGrid; ++y) {
+        for (int x = 0; x < kGrid; ++x) {
+            Entity e = scene.create();
+            Transform& t = scene.world().get<Transform>(e);
+            t.position = { x - kGrid / 2 + 0.5f, y - kGrid / 2 + 0.5f, 0.0f };
+            t.scale    = glm::vec3(0.7f);
+            auto& sp = scene.world().emplace<game::Spinner>(e);
+            sp.speed = 0.5f + 2.0f * (static_cast<float>(std::rand()) / RAND_MAX);
+        }
+    }
+
+    // The player: WASD/arrows move it; Space "jumps" (SBX-01).
+    Entity player = scene.create("Player");
+    scene.world().get<Transform>(player).scale = glm::vec3(1.4f);
+    scene.world().emplace<game::PlayerController>(player).speed = 8.0f;
 
     Timer frameTimer, fpsTimer;
     u32   frameCount = 0;
-    f32   elapsed    = 0.0f;
 
     while (!window->shouldClose()) {
         const auto dt = static_cast<f32>(frameTimer.elapsed());
         frameTimer.reset();
-        elapsed += dt;
         Time::update(dt);
 
         window->pollEvents();
-        RHI::clear();
+        input.update();                       // roll input edges (after poll)
+        scripts.update(scene.world(), dt);    // run all script lifecycle hooks
 
+        RHI::clear();
         Renderer2D::beginScene(camera.viewProjection());
-        for (int y = 0; y < kGrid; ++y) {
-            for (int x = 0; x < kGrid; ++x) {
-                const glm::vec2 pos{ x - kGrid / 2 + 0.5f, y - kGrid / 2 + 0.5f };
-                const f32 rot = elapsed + 0.2f * static_cast<f32>(x + y);
-                glm::mat4 t = glm::translate(glm::mat4(1.0f), glm::vec3(pos, 0.0f))
-                            * glm::rotate(glm::mat4(1.0f), rot, glm::vec3(0, 0, 1))
-                            * glm::scale(glm::mat4(1.0f), glm::vec3(0.8f));
-                const glm::vec4 color{
-                    0.5f + 0.5f * std::sin(static_cast<f32>(x) * 0.3f),
-                    0.5f + 0.5f * std::cos(static_cast<f32>(y) * 0.3f),
-                    0.8f, 1.0f
-                };
-                Renderer2D::drawQuad(t, color, textures[(x + y) % 3]);
-            }
+        for (auto&& [e, t] : scene.world().view<Transform>()) {
+            const bool isPlayer = scene.world().has<game::PlayerController>(e);
+            const glm::vec4 color = isPlayer ? glm::vec4(1.0f, 0.85f, 0.2f, 1.0f)
+                                             : glm::vec4(0.5f, 0.6f, 0.9f, 1.0f);
+            Renderer2D::drawQuad(trsMatrix(t), color, isPlayer ? checkerA : checkerB);
         }
         Renderer2D::endScene();
-
-        // Debug overlay (visible in Debug builds; compiled out in Release).
-        DebugDraw::begin(camera.viewProjection());
-        DebugDraw::rect(glm::vec2(0.0f), glm::vec2(static_cast<f32>(kGrid)), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
-        DebugDraw::circle(glm::vec2(0.0f), static_cast<f32>(kGrid) * 0.5f, glm::vec4(0.0f, 1.0f, 1.0f, 1.0f));
-        DebugDraw::flush();
 
         window->swapBuffers();
 
         ++frameCount;
         if (fpsTimer.elapsed() >= 1.0) {
             const RendererStats& s = Renderer2D::stats();
-            window->setTitle(std::format("Ember Sandbox — {} FPS | {} quads | {} draw calls",
-                                         frameCount, s.quadCount, s.drawCalls));
+            window->setTitle(std::format("Ember Sandbox — Scripting — {} FPS | {} quads",
+                                         frameCount, s.quadCount));
             frameCount = 0;
             fpsTimer.reset();
         }
     }
 
+    input.shutdown();
     DebugDraw::shutdown();
     Renderer2D::shutdown();
     EMBER_LOG_INFO("Ember shutting down");
