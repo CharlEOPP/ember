@@ -33,7 +33,6 @@ private:
     [[nodiscard]] f32 currentHalfHeight() const;   // derived from the projection
     [[nodiscard]] f32 worldPerPixel() const;
 
-    AssetManager*                 m_assets = nullptr;
     std::shared_ptr<IFramebuffer> m_fb;
     u32 m_fbW = 0, m_fbH = 0;
 

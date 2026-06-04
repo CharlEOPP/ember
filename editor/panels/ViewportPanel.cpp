@@ -11,7 +11,7 @@
 namespace ember {
 
 ViewportPanel::ViewportPanel(AssetManager& assets)
-    : m_assets(&assets), m_sprites(assets), m_tilemap(assets) {}
+    : m_sprites(assets), m_tilemap(assets) {}
 
 f32 ViewportPanel::currentHalfHeight() const {
     const f32 yScale = m_camera.viewProjection()[1][1];   // = 1 / halfHeight
