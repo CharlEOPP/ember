@@ -1,6 +1,6 @@
 #include "ember/scene/Scene.h"
 #include "ember/core/Assert.h"
-#include "TransformSystem.h"   // resolveWorldTransform (private systems/ include dir)
+#include "ember/scene/TransformSystem.h"   // resolveWorldTransform (now public)
 
 #include <algorithm>
 #include <utility>
