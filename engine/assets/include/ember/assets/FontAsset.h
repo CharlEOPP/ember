@@ -12,6 +12,9 @@ namespace ember {
 // A bitmap font atlas baked from a TTF via stb_truetype. The atlas is RGBA
 // (white with per-texel coverage in alpha) so glyphs render through the normal
 // sprite shader, tinted by the text color.
+//
+// Relocated from engine/renderer/2d in Epic 05 so it can be an AssetManager
+// asset type; the class name is unchanged to keep Renderer2D's API stable.
 class FontAsset {
 public:
     static constexpr u32 kFirstChar = 32;    // space

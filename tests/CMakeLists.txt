@@ -29,6 +29,9 @@ add_executable(ember_tests
     # Epic 04 — 2D Renderer (CPU-only: layout, shader parse, atlas, camera)
     renderer/TestRenderer2D.cpp
     renderer/TestCamera.cpp
+    # Epic 05 — Input & Assets (CPU-only: edge states, action map, context)
+    input/TestInputState.cpp
+    assets/TestAssetManager.cpp
 )
 
 target_link_libraries(ember_tests

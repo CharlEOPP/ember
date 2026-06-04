@@ -1,0 +1,25 @@
+# Ember default action map. Codes are Ember enum integer values
+# (Key/Mouse/GamepadButton/GamepadAxis from engine/input/include/ember/input/Keys.h).
+# type: key | mouse | gamepadButton | axis
+contexts:
+  game:
+    actions:
+      MoveX:
+        - { type: key, code: 68, scale: 1.0 }    # D  -> +X
+        - { type: key, code: 262, scale: 1.0 }   # Right
+        - { type: axis, code: 0, scale: 1.0 }    # Gamepad LeftX
+      MoveY:
+        - { type: key, code: 87, scale: 1.0 }    # W  -> +Y
+        - { type: key, code: 265, scale: 1.0 }   # Up
+        - { type: axis, code: 1, scale: -1.0 }   # Gamepad LeftY (inverted)
+      Jump:
+        - { type: key, code: 32 }                # Space
+        - { type: gamepadButton, code: 0 }       # Gamepad A
+  ui:
+    actions:
+      Confirm:
+        - { type: key, code: 257 }               # Enter
+        - { type: gamepadButton, code: 0 }       # Gamepad A
+      Cancel:
+        - { type: key, code: 256 }               # Escape
+        - { type: gamepadButton, code: 1 }       # Gamepad B

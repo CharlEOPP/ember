@@ -19,4 +19,7 @@ struct MouseScrollEvent  { f32 xOffset = 0.0f, yOffset = 0.0f; };
 struct SceneLoadedEvent   { std::string name; };
 struct SceneUnloadedEvent { std::string name; };
 
+// ---- Asset events ----
+struct AssetReloadedEvent { std::string path; };   // posted after a hot reload
+
 } // namespace ember

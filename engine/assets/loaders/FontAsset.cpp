@@ -1,4 +1,4 @@
-#include "ember/renderer/FontAsset.h"
+#include "ember/assets/FontAsset.h"
 #include "ember/platform/FileSystem.h"
 #include "ember/core/Log.h"
 

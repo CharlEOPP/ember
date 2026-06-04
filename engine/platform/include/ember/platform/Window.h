@@ -19,7 +19,7 @@ struct WindowSpec {
 
 class Window {
 public:
-    using EventCallbackFn = std::function<void(Event&)>;
+    using EventCallbackFn = std::function<void(platform::Event&)>;
 
     explicit Window(const WindowSpec& spec);
     ~Window();

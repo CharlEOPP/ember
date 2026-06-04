@@ -1,6 +1,6 @@
 #include "ember/renderer/Renderer2D.h"
 #include "ember/renderer/ShaderLibrary.h"
-#include "ember/renderer/FontAsset.h"
+#include "ember/assets/FontAsset.h"
 #include "ember/core/Assert.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -213,10 +213,11 @@ void Renderer2D::drawQuad(const glm::vec2& position, const glm::vec2& size,
     drawQuad(t, tint, texture, tiling, -1.0f);
 }
 
-void Renderer2D::drawSprite(const glm::mat4& worldTransform, const SpriteRenderer& sprite, f32 entityID) {
+void Renderer2D::drawSprite(const glm::mat4& worldTransform, const SpriteRenderer& sprite,
+                            const std::shared_ptr<ITexture2D>& texture, f32 entityID) {
     const glm::vec3 flip(sprite.flipX ? -1.0f : 1.0f, sprite.flipY ? -1.0f : 1.0f, 1.0f);
     const glm::mat4 t = worldTransform * glm::scale(glm::mat4(1.0f), flip);
-    drawQuad(t, sprite.color, sprite.texture, 1.0f, entityID);
+    drawQuad(t, sprite.color, texture, 1.0f, entityID);
 }
 
 void Renderer2D::drawText(const std::string& text, const FontAsset& font,

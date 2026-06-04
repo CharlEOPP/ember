@@ -2,7 +2,13 @@
 #include "ember/core/Types.h"
 #include <string>
 
-namespace ember {
+// Platform-layer event objects for the immediate Window::setEventCallback path.
+// These live in `ember::platform` to avoid colliding with the deferred EventBus
+// POD events in <ember/events/Events.h>, which intentionally reuse names like
+// WindowResizeEvent. The two systems are distinct: this one is a polymorphic,
+// synchronously-dispatched callback payload; the EventBus one is a queued struct.
+
+namespace ember::platform {
 
 enum class EventType {
     None = 0,
@@ -39,4 +45,4 @@ struct WindowResizeEvent : Event {
     std::string getName()  const override { return "WindowResizeEvent"; }
 };
 
-} // namespace ember
+} // namespace ember::platform

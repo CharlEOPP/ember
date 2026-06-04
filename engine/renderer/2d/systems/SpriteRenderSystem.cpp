@@ -3,6 +3,9 @@
 #include "ember/renderer/Components2D.h"
 #include "ember/ecs/World.h"
 #include "ember/ecs/Components.h"
+#include "ember/assets/AssetManager.h"
+#include "ember/assets/Texture2D.h"
+#include "ember/assets/loaders/Texture2DLoader.h"
 
 #include <algorithm>
 #include <type_traits>
@@ -23,7 +26,19 @@ void SpriteRenderSystem::update(World& world, f32 /*dt*/) {
 
     for (const Item& it : items) {
         const auto id = static_cast<f32>(static_cast<std::underlying_type_t<Entity>>(it.entity));
-        Renderer2D::drawSprite(it.wt->matrix, *it.sprite, id);
+
+        // Resolve the sprite's texture handle. A valid, resident handle yields
+        // its RHI texture; a set-but-not-yet-resident handle (async) or a bad
+        // path shows the missing-texture placeholder; an empty handle with no
+        // path renders as a flat-color quad (null texture).
+        std::shared_ptr<ITexture2D> tex;
+        if (it.sprite->texture.valid()) {
+            if (Texture2D* t = m_assets ? m_assets->get(it.sprite->texture) : nullptr)
+                tex = t->texture;
+            else
+                tex = Texture2DLoader::missingTexture();
+        }
+        Renderer2D::drawSprite(it.wt->matrix, *it.sprite, tex, id);
     }
 }
 

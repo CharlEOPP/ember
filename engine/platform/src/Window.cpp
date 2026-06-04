@@ -81,7 +81,7 @@ void Window::init(const WindowSpec& spec) {
         self.m_state.width  = static_cast<u32>(width);
         self.m_state.height = static_cast<u32>(height);
         if (self.m_eventCallback) {
-            WindowResizeEvent e(static_cast<u32>(width), static_cast<u32>(height));
+            platform::WindowResizeEvent e(static_cast<u32>(width), static_cast<u32>(height));
             self.m_eventCallback(e);
         }
     });
@@ -89,7 +89,7 @@ void Window::init(const WindowSpec& spec) {
     glfwSetWindowCloseCallback(m_window, [](GLFWwindow* w) {
         auto& self = *static_cast<Window*>(glfwGetWindowUserPointer(w));
         if (self.m_eventCallback) {
-            WindowCloseEvent e;
+            platform::WindowCloseEvent e;
             self.m_eventCallback(e);
         }
     });

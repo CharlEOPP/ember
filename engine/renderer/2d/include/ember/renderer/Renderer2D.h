@@ -23,8 +23,10 @@ public:
     static void drawQuad(const glm::mat4& transform, const glm::vec4& color,
                          const std::shared_ptr<ITexture2D>& texture = nullptr,
                          f32 tiling = 1.0f, f32 entityID = -1.0f);
+    // `texture` is the resolved RHI texture for the sprite's AssetHandle
+    // (SpriteRenderSystem resolves it via the AssetManager). May be null.
     static void drawSprite(const glm::mat4& worldTransform, const SpriteRenderer& sprite,
-                           f32 entityID = -1.0f);
+                           const std::shared_ptr<ITexture2D>& texture, f32 entityID = -1.0f);
     static void drawText(const std::string& text, const FontAsset& font,
                          const glm::vec2& position, f32 scale, const glm::vec4& color);
     static const RendererStats& stats();

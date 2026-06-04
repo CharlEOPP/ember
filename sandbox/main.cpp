@@ -61,9 +61,9 @@ int main() {
     auto checkerB = makeChecker(8, 0xFFFFFFFFu, 0xFF60C040u);   // white / green-ish
     const std::shared_ptr<ITexture2D> textures[3] = { white, checkerA, checkerB };
 
-    window->setEventCallback([&](Event& e) {
-        if (e.getType() == EventType::WindowResize) {
-            auto& re = static_cast<WindowResizeEvent&>(e);
+    window->setEventCallback([&](platform::Event& e) {
+        if (e.getType() == platform::EventType::WindowResize) {
+            auto& re = static_cast<platform::WindowResizeEvent&>(e);
             RHI::setViewport(0, 0, re.width, re.height);
             camera.setViewportSize(re.width, re.height);
         }
