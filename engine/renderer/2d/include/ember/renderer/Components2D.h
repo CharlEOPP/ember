@@ -18,6 +18,10 @@ struct SpriteRenderer {
     AssetHandle<Texture2D> texture;
     std::string texturePath;
     glm::vec4   color{1.0f};
+    // Sub-rectangle of the texture to display: (minU, minV, maxU, maxV).
+    // Defaults to the full texture; SpriteAnimationSystem / tilemaps set it to a
+    // single atlas frame (Epic 12, SAN-01).
+    glm::vec4   uvRect{0.0f, 0.0f, 1.0f, 1.0f};
     i32         layer  = 0;
     bool        flipX  = false;
     bool        flipY  = false;
@@ -35,6 +39,7 @@ struct Camera2D {
 EMBER_REFLECT(SpriteRenderer) {
     EMBER_FIELD(texturePath);
     EMBER_FIELD(color);
+    EMBER_FIELD(uvRect);
     EMBER_FIELD(layer);
     EMBER_FIELD(flipX);
     EMBER_FIELD(flipY);

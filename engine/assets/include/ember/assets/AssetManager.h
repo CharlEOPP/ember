@@ -120,6 +120,17 @@ public:
         return static_cast<T*>(it->second.data.get());
     }
 
+    // Shared ownership of resident data (keeps it alive past a release, e.g. an
+    // audio voice playing a clip). nullptr if dead / wrong type.
+    template<typename T>
+    std::shared_ptr<T> getShared(AssetHandle<T> handle) {
+        std::lock_guard<std::mutex> lk(m_mutex);
+        auto it = m_entries.find(handle.id);
+        if (it == m_entries.end()) return nullptr;
+        if (it->second.type != std::type_index(typeid(T))) return nullptr;
+        return std::static_pointer_cast<T>(it->second.data);
+    }
+
     template<typename T> void release(AssetHandle<T> h) { release(h.id); }
     template<typename T> void pin(AssetHandle<T> h)     { pin(h.id); }
     template<typename T> void unpin(AssetHandle<T> h)   { unpin(h.id); }

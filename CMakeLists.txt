@@ -31,6 +31,8 @@ add_subdirectory(engine/input)
 add_subdirectory(engine/renderer)
 add_subdirectory(engine/assets)
 add_subdirectory(engine/scripting)
+add_subdirectory(engine/audio)
+add_subdirectory(engine/physics2d)
 
 # ---- Aggregate interface target ----
 add_library(ember INTERFACE)
@@ -46,6 +48,8 @@ target_link_libraries(ember INTERFACE
     ember_renderer_api
     ember_renderer_2d
     ember_scripting
+    ember_audio
+    ember_physics2d
 )
 
 # ---- Applications ----

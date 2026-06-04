@@ -1,6 +1,12 @@
 add_library(ember_renderer_2d STATIC
     src/Renderer2D.cpp
     src/DebugDraw.cpp
+    src/SpriteAnimationSystem.cpp
+    src/SpriteAnimationClipLoader.cpp
+    src/TilemapRenderSystem.cpp
+    src/TilemapLoader.cpp
+    src/ParticleSystem.cpp
+    src/UISystem.cpp
     systems/SpriteRenderSystem.cpp
     systems/RenderComponentSerialization.cpp
     ../camera/src/CameraSystem.cpp
@@ -19,7 +25,7 @@ target_include_directories(ember_renderer_2d
 # never leaks into renderer headers.
 target_link_libraries(ember_renderer_2d
     PUBLIC  ember_core ember_ecs ember_scene ember_renderer_api ember_assets glm::glm
-    PRIVATE ember_serialization yaml-cpp::yaml-cpp
+    PRIVATE ember_serialization yaml-cpp::yaml-cpp ember_input
 )
 
 target_compile_features(ember_renderer_2d PUBLIC cxx_std_20)

@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <type_traits>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
@@ -87,6 +88,12 @@ struct YAMLWriteVisitor {
         auto& r = assetSerializationResolver();
         out << (r.toPath ? r.toPath(v.id) : std::string{});
     }
+    // Enums serialize as their underlying integer.
+    template<typename E, std::enable_if_t<std::is_enum_v<E>, int> = 0>
+    void operator()(const char* n, E& v) {
+        key(n);
+        out << static_cast<long long>(static_cast<std::underlying_type_t<E>>(v));
+    }
 };
 
 struct YAMLReadVisitor {
@@ -121,6 +128,11 @@ struct YAMLReadVisitor {
         const std::string path = node[n].as<std::string>();
         auto& r = assetSerializationResolver();
         v.id = (r.toHandle && !path.empty()) ? r.toHandle(std::type_index(typeid(T)), path) : 0;
+    }
+    template<typename E, std::enable_if_t<std::is_enum_v<E>, int> = 0>
+    void operator()(const char* n, E& v) {
+        if (node[n].IsDefined())
+            v = static_cast<E>(static_cast<std::underlying_type_t<E>>(node[n].as<long long>()));
     }
 };
 

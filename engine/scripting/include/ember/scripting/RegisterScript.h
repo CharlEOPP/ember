@@ -28,6 +28,9 @@ inline ScriptTypeInfo makeScriptInfo(const char* name, i32 order) {
     info.connectDestroy = [](World& w) {
         w.template on_destroy<T>().template connect<&ScriptSystem::onComponentDestroyed<T>>();
     };
+    info.tryDispatch = [](World& w, Entity e, const std::function<void(ScriptComponent&)>& fn) {
+        if (auto* c = w.tryGet<T>(e)) fn(static_cast<ScriptComponent&>(*c));
+    };
     return info;
 }
 } // namespace detail

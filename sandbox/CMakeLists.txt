@@ -23,3 +23,17 @@ if(WIN32)
         WIN32_EXECUTABLE $<CONFIG:Release>
     )
 endif()
+
+# Epic 12 — integrated 2D gameplay slice (physics + tilemap + particles + UI + audio).
+add_executable(ember_sandbox_game2d game2d.cpp)
+target_include_directories(ember_sandbox_game2d PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(ember_sandbox_game2d PRIVATE ember)
+ember_set_compiler_options(ember_sandbox_game2d)
+add_custom_command(TARGET ember_sandbox_game2d POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:ember_sandbox_game2d>/assets)
+if(WIN32)
+    set_target_properties(ember_sandbox_game2d PROPERTIES
+        WIN32_EXECUTABLE $<CONFIG:Release>
+    )
+endif()

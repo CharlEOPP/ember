@@ -36,6 +36,14 @@ add_executable(ember_tests
     scripting/TestScriptLifecycle.cpp
     scripting/TestScriptSerialization.cpp
     scripting/TestScriptAssets.cpp
+    # Epic 12 — 2D gameplay & audio
+    audio/TestAudioEngine.cpp
+    physics2d/TestRigidBody2D.cpp
+    physics2d/TestCollision2D.cpp
+    physics2d/TestCollisionEvents.cpp
+    renderer/TestSpriteAnimation.cpp
+    renderer/TestTilemap.cpp
+    renderer/TestParticles.cpp
 )
 
 target_link_libraries(ember_tests

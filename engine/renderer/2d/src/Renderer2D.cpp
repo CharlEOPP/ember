@@ -202,6 +202,23 @@ void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color,
     ++s.quadCount; s.stats.quadCount++; s.stats.vertexCount += 4;
 }
 
+void Renderer2D::drawQuad(const glm::mat4& transform, const glm::vec4& color,
+                          const std::shared_ptr<ITexture2D>& texture, const glm::vec4& uvRect, f32 entityID) {
+    EMBER_ASSERT(s.inScene, "Renderer2D::drawQuad called outside beginScene/endScene");
+    if (s.quadCount >= kMaxQuads) nextBatch();
+    const f32 texIndex = static_cast<f32>(resolveSlot(texture));
+    const glm::vec2 uvMin{uvRect.x, uvRect.y};
+    const glm::vec2 uvMax{uvRect.z, uvRect.w};
+    QuadVertex* v = &s.vertices[s.quadCount * 4];
+    for (int i = 0; i < 4; ++i) {
+        v[i].position = glm::vec3(transform * s.quadCorners[i]);
+        v[i].color = color;
+        v[i].uv = uvMin + s.quadUVs[i] * (uvMax - uvMin);   // map corner across the rect
+        v[i].texIndex = texIndex; v[i].entityID = entityID;
+    }
+    ++s.quadCount; s.stats.quadCount++; s.stats.vertexCount += 4;
+}
+
 void Renderer2D::drawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color) {
     glm::mat4 t = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(size, 1.0f));
     drawQuad(t, color, nullptr, 1.0f, -1.0f);
@@ -217,7 +234,7 @@ void Renderer2D::drawSprite(const glm::mat4& worldTransform, const SpriteRendere
                             const std::shared_ptr<ITexture2D>& texture, f32 entityID) {
     const glm::vec3 flip(sprite.flipX ? -1.0f : 1.0f, sprite.flipY ? -1.0f : 1.0f, 1.0f);
     const glm::mat4 t = worldTransform * glm::scale(glm::mat4(1.0f), flip);
-    drawQuad(t, sprite.color, texture, 1.0f, entityID);
+    drawQuad(t, sprite.color, texture, sprite.uvRect, entityID);
 }
 
 void Renderer2D::drawText(const std::string& text, const FontAsset& font,

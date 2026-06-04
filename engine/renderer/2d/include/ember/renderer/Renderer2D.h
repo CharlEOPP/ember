@@ -23,6 +23,11 @@ public:
     static void drawQuad(const glm::mat4& transform, const glm::vec4& color,
                          const std::shared_ptr<ITexture2D>& texture = nullptr,
                          f32 tiling = 1.0f, f32 entityID = -1.0f);
+    // UV-rect overload: maps the quad across (minU,minV,maxU,maxV) — used for
+    // atlas frames (sprite animation, tilemaps, particles).
+    static void drawQuad(const glm::mat4& transform, const glm::vec4& color,
+                         const std::shared_ptr<ITexture2D>& texture,
+                         const glm::vec4& uvRect, f32 entityID = -1.0f);
     // `texture` is the resolved RHI texture for the sprite's AssetHandle
     // (SpriteRenderSystem resolves it via the AssetManager). May be null.
     static void drawSprite(const glm::mat4& worldTransform, const SpriteRenderer& sprite,

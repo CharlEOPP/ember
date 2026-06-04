@@ -13,6 +13,9 @@ namespace ember {
 class Scene;
 class AssetManager;
 
+// Phase of a collision/trigger contact, derived by the physics system.
+enum class ContactPhase : u8 { Enter, Stay, Exit };
+
 // Drives ScriptComponent lifecycle. One instance lives at Phase::Update. It
 // builds a flat, order-sorted list of all registered scripts each tick and runs
 // the start / fixed / update / late passes, plus deferred destruction. GPU- and
@@ -25,6 +28,10 @@ public:
 
     // Called by ScriptComponent::destroy(); the entity is removed at end of frame.
     void scheduleDestroy(Entity e);
+
+    // Invoke the matching collision/trigger callback on every script attached to
+    // `self`, passing `other`. Called by the physics system (Physics2DSystem).
+    void dispatchCollision(Entity self, Entity other, ContactPhase phase, bool isTrigger);
 
     void setFixedDelta(f32 seconds) { m_fixedDelta = seconds; }
     [[nodiscard]] f32 fixedDelta() const { return m_fixedDelta; }

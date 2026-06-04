@@ -22,6 +22,9 @@ struct ScriptTypeInfo {
     std::function<void(World&, const std::function<void(Entity, ScriptComponent&)>&)> forEach;
     // Connect this type's entt on_destroy<T> hook so onDestroy fires before removal.
     std::function<void(World&)> connectDestroy;
+    // Invoke a callback on this type's instance on one entity, if present
+    // (used to route collision events to a specific entity's scripts).
+    std::function<void(World&, Entity, const std::function<void(ScriptComponent&)>&)> tryDispatch;
 };
 
 // Process-global table of registered script types (mirrors ComponentRegistry).

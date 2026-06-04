@@ -49,6 +49,28 @@ void ScriptSystem::scheduleDestroy(Entity e) {
     m_pendingDestroy.push_back(e);
 }
 
+void ScriptSystem::dispatchCollision(Entity self, Entity other, ContactPhase phase, bool isTrigger) {
+    if (!m_scene) return;
+    World& w = m_scene->world();
+    if (!w.valid(self)) return;
+    for (const auto& info : ScriptRegistry::instance().all()) {
+        if (!info.tryDispatch) continue;
+        info.tryDispatch(w, self, [&](ScriptComponent& s) {
+            inject(s, self);
+            guarded(s, "onCollision", [&] {
+                if (isTrigger) {
+                    if (phase == ContactPhase::Enter)      s.onTriggerEnter(other);
+                    else if (phase == ContactPhase::Exit)  s.onTriggerExit(other);
+                } else {
+                    if (phase == ContactPhase::Enter)      s.onCollisionEnter(other);
+                    else if (phase == ContactPhase::Stay)  s.onCollisionStay(other);
+                    else                                   s.onCollisionExit(other);
+                }
+            });
+        });
+    }
+}
+
 void ScriptSystem::update(World& world, f32 dt) {
     // 1. Rebuild the flat list from every registered script type's enumerator,
     //    injecting owner/scene, then sort by (order, name) for determinism.
