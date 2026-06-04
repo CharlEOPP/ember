@@ -1,4 +1,4 @@
-# The audio loader (miniaudio) is deferred — see plan Phase 4 note.
+# The audio loader (miniaudio) is gated behind EMBER_ENABLE_AUDIO (see below).
 add_library(ember_assets STATIC
     src/AssetManager.cpp
     src/AssetDatabase.cpp
@@ -8,6 +8,7 @@ add_library(ember_assets STATIC
     loaders/FontAsset.cpp
     loaders/FontLoader.cpp
     loaders/ShaderLoader.cpp
+    loaders/PrefabLoader.cpp
     loaders/DefaultLoaders.cpp
     loaders/stb_impl.cpp
 )
@@ -37,4 +38,20 @@ if(MSVC)
     set_source_files_properties(loaders/stb_impl.cpp PROPERTIES COMPILE_OPTIONS "/w")
 else()
     set_source_files_properties(loaders/stb_impl.cpp PROPERTIES COMPILE_OPTIONS "-w")
+endif()
+
+# ---- Optional audio loader (miniaudio) ----
+if(EMBER_ENABLE_AUDIO)
+    target_sources(ember_assets PRIVATE
+        loaders/AudioClipLoader.cpp
+        loaders/miniaudio_impl.cpp
+    )
+    target_compile_definitions(ember_assets PRIVATE EMBER_ENABLE_AUDIO)
+    target_include_directories(ember_assets PRIVATE ${MINIAUDIO_INCLUDE_DIR})
+    # miniaudio is a third-party single header: warnings off for its impl TU.
+    if(MSVC)
+        set_source_files_properties(loaders/miniaudio_impl.cpp PROPERTIES COMPILE_OPTIONS "/w")
+    else()
+        set_source_files_properties(loaders/miniaudio_impl.cpp PROPERTIES COMPILE_OPTIONS "-w")
+    endif()
 endif()

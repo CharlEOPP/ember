@@ -2,6 +2,7 @@ add_library(ember_serialization STATIC
     src/YAMLSerializer.cpp
     src/YAMLDeserializer.cpp
     src/SceneSerialization.cpp
+    src/AssetResolver.cpp
 )
 
 target_include_directories(ember_serialization

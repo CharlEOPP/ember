@@ -91,6 +91,26 @@ TEST_CASE("Action map aggregates bindings (logical OR)", "[input]") {
     REQUIRE(moveX.axisValue == 1.0f);
 }
 
+TEST_CASE("Default action map binds both movement directions", "[input]") {
+    InputManager im;
+    im.makeActive();
+    im.loadDefaultActionMap();
+
+    im.feedKey(Key::A, true);            // left
+    im.update();
+    REQUIRE(Input::getAction("MoveX").axisValue == -1.0f);
+
+    im.feedKey(Key::A, false);
+    im.feedKey(Key::D, true);            // right
+    im.update();
+    REQUIRE(Input::getAction("MoveX").axisValue == 1.0f);
+
+    im.feedKey(Key::D, false);
+    im.feedKey(Key::S, true);            // down
+    im.update();
+    REQUIRE(Input::getAction("MoveY").axisValue == -1.0f);
+}
+
 TEST_CASE("Context stack: only the top context resolves actions", "[input]") {
     InputManager im;
     im.makeActive();

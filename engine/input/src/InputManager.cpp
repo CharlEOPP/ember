@@ -292,11 +292,15 @@ void InputManager::loadDefaultActionMap() {
     auto& game = m_contextActions["game"];
 
     InputAction moveX("MoveX");
-    moveX.bindKey(Key::D).bindKey(Key::Right).bindAxis(GamepadAxis::LeftX, 1.0f);
+    moveX.bindKey(Key::D).bindKey(Key::Right)
+         .bindKey(Key::A, -1.0f).bindKey(Key::Left, -1.0f)
+         .bindAxis(GamepadAxis::LeftX, 1.0f);
     game["MoveX"] = moveX;
 
     InputAction moveY("MoveY");
-    moveY.bindKey(Key::W).bindKey(Key::Up).bindAxis(GamepadAxis::LeftY, -1.0f);
+    moveY.bindKey(Key::W).bindKey(Key::Up)
+         .bindKey(Key::S, -1.0f).bindKey(Key::Down, -1.0f)
+         .bindAxis(GamepadAxis::LeftY, -1.0f);
     game["MoveY"] = moveY;
 
     InputAction jump("Jump");

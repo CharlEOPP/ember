@@ -5,6 +5,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# ---- Options ----
+# Audio (miniaudio) is off by default: it pulls an extra dependency at configure
+# time. Enable with -DEMBER_ENABLE_AUDIO=ON to build the AudioClip loader.
+option(EMBER_ENABLE_AUDIO "Build the miniaudio-based audio loader" OFF)
+
 # ---- CMake modules ----
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 

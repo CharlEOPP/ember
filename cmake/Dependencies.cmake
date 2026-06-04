@@ -90,4 +90,18 @@ set(IMGUI_SOURCE_DIR "${imgui_SOURCE_DIR}" CACHE PATH "ImGui source directory" F
 # sole GL loader. Without this, MinGW's <GL/gl.h> clashes with glad/gl.h.
 target_compile_definitions(glfw INTERFACE GLFW_INCLUDE_NONE)
 
+# ---- miniaudio (optional, single-header) ----
+if(EMBER_ENABLE_AUDIO)
+    # SOURCE_SUBDIR points at a non-existent dir so MakeAvailable only populates
+    # it (no add_subdirectory of miniaudio's CMake project) — same idea as stb.
+    FetchContent_Declare(miniaudio
+        GIT_REPOSITORY https://github.com/mackron/miniaudio.git
+        GIT_TAG        0.11.21
+        SOURCE_SUBDIR  do-not-build
+    )
+    FetchContent_MakeAvailable(miniaudio)
+    set(MINIAUDIO_INCLUDE_DIR "${miniaudio_SOURCE_DIR}" CACHE PATH "miniaudio include dir" FORCE)
+    message(STATUS "Ember: audio enabled (miniaudio at ${MINIAUDIO_INCLUDE_DIR})")
+endif()
+
 message(STATUS "Ember: Dependencies ready")

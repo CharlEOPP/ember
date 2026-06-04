@@ -35,6 +35,7 @@ add_executable(ember_tests
     # Epic 06 — Scripting (CPU-only: lifecycle, order, serialization)
     scripting/TestScriptLifecycle.cpp
     scripting/TestScriptSerialization.cpp
+    scripting/TestScriptAssets.cpp
 )
 
 target_link_libraries(ember_tests

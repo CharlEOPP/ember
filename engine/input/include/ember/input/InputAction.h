@@ -33,6 +33,11 @@ public:
         m_bindings.push_back({BindingKind::Key, static_cast<u16>(k), 1.0f});
         return *this;
     }
+    // Bind a key contributing `scale` to the action's axis (e.g. -1 for "left"/"down").
+    InputAction& bindKey(Key k, f32 scale) {
+        m_bindings.push_back({BindingKind::Key, static_cast<u16>(k), scale});
+        return *this;
+    }
     InputAction& bindMouseButton(Mouse m) {
         m_bindings.push_back({BindingKind::MouseButton, static_cast<u16>(m), 1.0f});
         return *this;

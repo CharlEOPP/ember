@@ -5,12 +5,16 @@ contexts:
   game:
     actions:
       MoveX:
-        - { type: key, code: 68, scale: 1.0 }    # D  -> +X
-        - { type: key, code: 262, scale: 1.0 }   # Right
+        - { type: key, code: 68, scale: 1.0 }    # D     -> +X
+        - { type: key, code: 262, scale: 1.0 }   # Right -> +X
+        - { type: key, code: 65, scale: -1.0 }   # A     -> -X
+        - { type: key, code: 263, scale: -1.0 }  # Left  -> -X
         - { type: axis, code: 0, scale: 1.0 }    # Gamepad LeftX
       MoveY:
-        - { type: key, code: 87, scale: 1.0 }    # W  -> +Y
-        - { type: key, code: 265, scale: 1.0 }   # Up
+        - { type: key, code: 87, scale: 1.0 }    # W     -> +Y
+        - { type: key, code: 265, scale: 1.0 }   # Up    -> +Y
+        - { type: key, code: 83, scale: -1.0 }   # S     -> -Y
+        - { type: key, code: 264, scale: -1.0 }  # Down  -> -Y
         - { type: axis, code: 1, scale: -1.0 }   # Gamepad LeftY (inverted)
       Jump:
         - { type: key, code: 32 }                # Space

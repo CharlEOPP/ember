@@ -11,6 +11,7 @@
 namespace ember {
 
 class Scene;
+class AssetManager;
 
 // Drives ScriptComponent lifecycle. One instance lives at Phase::Update. It
 // builds a flat, order-sorted list of all registered scripts each tick and runs
@@ -28,6 +29,10 @@ public:
     void setFixedDelta(f32 seconds) { m_fixedDelta = seconds; }
     [[nodiscard]] f32 fixedDelta() const { return m_fixedDelta; }
 
+    // Optional: lets scripts spawn prefabs via ScriptComponent::instantiate().
+    void setAssetManager(AssetManager* assets) { m_assets = assets; }
+    [[nodiscard]] AssetManager* assets() const { return m_assets; }
+
     // entt on_destroy<T> target (static → usable as a free connect target). Fires
     // onDestroy before the component is removed, for both destroy() and external
     // world.destroy. Defined here so EMBER_REGISTER_SCRIPT can take its address.
@@ -44,7 +49,8 @@ private:
 
     struct ScriptEntry { Entity e; ScriptComponent* script; i32 order; const std::string* name; };
 
-    Scene* m_scene = nullptr;
+    Scene*        m_scene  = nullptr;
+    AssetManager* m_assets = nullptr;   // optional; for instantiate()
     f32    m_fixedDelta = 0.02f;   // 50 Hz (SS-06)
     f32    m_accum      = 0.0f;
     std::vector<Entity>      m_pendingDestroy;
