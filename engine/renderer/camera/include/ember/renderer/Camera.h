@@ -31,12 +31,18 @@ public:
     void pan(const glm::vec2& delta);
     void zoom(f32 amount);
     const glm::mat4& viewProjection() const { return m_viewProjection; }
+    // Separate view / projection (e.g. for ImGuizmo, which decomposes them).
+    const glm::mat4& view() const { return m_view; }
+    const glm::mat4& projection() const { return m_projection; }
+    [[nodiscard]] f32 halfHeight() const { return m_halfHeight; }
 
 private:
     void recompute();
     glm::vec2 m_position{0.0f};
     f32       m_halfHeight = 5.0f;
     f32       m_aspect     = 16.0f / 9.0f;
+    glm::mat4 m_view{1.0f};
+    glm::mat4 m_projection{1.0f};
     glm::mat4 m_viewProjection{1.0f};
 };
 

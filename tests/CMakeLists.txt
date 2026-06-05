@@ -49,6 +49,14 @@ add_executable(ember_tests
     editor/TestSceneCommands.cpp
     editor/TestPicking.cpp
     editor/TestInspectorModel.cpp
+    # Epic 08 — Editor v2
+    editor/TestSelection.cpp
+    editor/TestGizmo.cpp
+    editor/TestComposite.cpp
+    editor/TestProfiler.cpp
+    editor/TestTilemapEdit.cpp
+    editor/TestImportSettings.cpp
+    editor/TestEditorSettings.cpp
 )
 
 target_link_libraries(ember_tests

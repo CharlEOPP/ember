@@ -22,6 +22,7 @@ private:
     std::filesystem::path m_root    = "assets";
     std::filesystem::path m_current = "assets";
     std::filesystem::path m_pendingDelete;
+    std::filesystem::path m_selectedFile;   // for the import-settings editor
     std::function<void(const std::string&)> m_openScene;
 };
 

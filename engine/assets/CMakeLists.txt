@@ -2,6 +2,7 @@
 add_library(ember_assets STATIC
     src/AssetManager.cpp
     src/AssetDatabase.cpp
+    src/ImportSettings.cpp
     src/FileWatcher.cpp
     src/HotReload.cpp
     loaders/Texture2DLoader.cpp

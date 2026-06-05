@@ -13,6 +13,8 @@ public:
     void end(Window& window);     // render draw data (+ multi-viewport update)
     void shutdown();
 
+    void applyTheme(int theme);   // 0 Dark, 1 Light, 2 Classic
+
     [[nodiscard]] bool initialized() const { return m_initialized; }
 
 private:

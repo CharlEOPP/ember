@@ -6,6 +6,7 @@
 #include "ember/renderer/SpriteAnimationSystem.h"
 #include "ember/serialization/YAMLSerializer.h"
 #include "ember/core/Log.h"
+#include "ember/core/Profiler.h"
 
 namespace ember {
 
@@ -43,9 +44,9 @@ void PlayModeController::stop(Scene& scene) {
 void PlayModeController::update(Scene& scene, f32 dt) {
     if (m_mode != Mode::Playing) return;   // frozen while Paused / Edit
     World& w = scene.world();
-    m_physics.update(w, dt);
-    if (m_scripts) m_scripts->update(w, dt);
-    if (m_anim)    m_anim->update(w, dt);
+    { EMBER_PROFILE_SCOPE("Physics");   m_physics.update(w, dt); }
+    if (m_scripts) { EMBER_PROFILE_SCOPE("Scripts");   m_scripts->update(w, dt); }
+    if (m_anim)    { EMBER_PROFILE_SCOPE("Animation"); m_anim->update(w, dt); }
     // Particles are stepped + drawn by the ViewportPanel inside beginScene.
 }
 

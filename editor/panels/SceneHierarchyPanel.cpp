@@ -4,6 +4,7 @@
 #include "../CommandHistory.h"
 
 #include "ember/scene/Scene.h"
+#include "ember/scene/PrefabInstance.h"
 #include "ember/ecs/World.h"
 #include "ember/ecs/Components.h"
 
@@ -11,8 +12,16 @@
 #include <cstring>
 #include <memory>
 #include <type_traits>
+#include <vector>
 
 namespace ember {
+
+// If `target` is part of a multi-selection, act on the whole selection; else just it.
+static std::vector<Entity> targetsFor(const EditorContext& ctx, Entity target) {
+    if (ctx.selection.contains(target) && ctx.selection.size() > 1)
+        return std::vector<Entity>(ctx.selection.entities().begin(), ctx.selection.entities().end());
+    return { target };
+}
 
 static const char* entityLabel(Scene& scene, Entity e, char* buf, size_t n) {
     const Tag* tag = scene.world().tryGet<Tag>(e);
@@ -27,8 +36,8 @@ void SceneHierarchyPanel::drawNode(EditorContext& ctx, Entity e) {
     const std::vector<Entity> children = SceneOps::childrenOf(scene, e);
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-    if (children.empty())     flags |= ImGuiTreeNodeFlags_Leaf;
-    if (ctx.selected == e)    flags |= ImGuiTreeNodeFlags_Selected;
+    if (children.empty())          flags |= ImGuiTreeNodeFlags_Leaf;
+    if (ctx.selection.contains(e)) flags |= ImGuiTreeNodeFlags_Selected;
 
     char tmp[64];
     const void* id = reinterpret_cast<void*>(static_cast<uintptr_t>(
@@ -53,9 +62,15 @@ void SceneHierarchyPanel::drawNode(EditorContext& ctx, Entity e) {
         }
         open = true;   // keep expanded while editing
     } else {
+        const bool isPrefab = scene.world().tryGet<PrefabInstance>(e) != nullptr;
+        if (isPrefab) ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(120, 170, 255, 255));
         open = ImGui::TreeNodeEx(id, flags, "%s", entityLabel(scene, e, tmp, sizeof(tmp)));
-        if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-            ctx.selected = e;
+        if (isPrefab) ImGui::PopStyleColor();
+        if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+            const ImGuiIO& io = ImGui::GetIO();
+            if (io.KeyShift || io.KeyCtrl) ctx.selection.toggle(e);
+            else                           ctx.selection.selectOnly(e);
+        }
         if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsItemHovered()) {
             m_renaming = e;
             const char* lbl = entityLabel(scene, e, tmp, sizeof(tmp));
@@ -80,11 +95,12 @@ void SceneHierarchyPanel::drawNode(EditorContext& ctx, Entity e) {
 
     // Per-entity context menu.
     if (ImGui::BeginPopupContextItem()) {
-        ctx.selected = e;
+        if (!ctx.selection.contains(e)) ctx.selection.selectOnly(e);
         if (ImGui::MenuItem("Create Empty"))  { m_pending = Pending::CreateEmpty;  m_pendingTarget = e; }
         if (ImGui::MenuItem("Create Sprite")) { m_pending = Pending::CreateSprite; m_pendingTarget = e; }
         if (ImGui::MenuItem("Create Camera")) { m_pending = Pending::CreateCamera; m_pendingTarget = e; }
         ImGui::Separator();
+        if (ImGui::MenuItem("Save as Prefab")) ctx.savePrefabRequest = e;
         if (ImGui::MenuItem("Duplicate"))     { m_pending = Pending::Duplicate;    m_pendingTarget = e; }
         if (ImGui::MenuItem("Delete"))        { m_pending = Pending::Delete;       m_pendingTarget = e; }
         ImGui::EndPopup();
@@ -107,7 +123,7 @@ void SceneHierarchyPanel::onImGuiRender(EditorContext& ctx) {
         // Click empty space clears selection.
         if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
             && !ImGui::IsAnyItemHovered())
-            ctx.selected = NULL_ENTITY;
+            ctx.selection.clear();
 
         // Drop onto the panel background = un-parent.
         ImGui::Dummy(ImGui::GetContentRegionAvail());
@@ -131,11 +147,21 @@ void SceneHierarchyPanel::onImGuiRender(EditorContext& ctx) {
 
         // ---- Apply deferred actions (after the tree walk) ----
         if (m_hasReparent) {
-            const Entity oldParent = scene.getParent(m_reparentChild);
-            if (ctx.history)
-                ctx.history->push(Commands::reparent(scene, m_reparentChild, oldParent, m_reparentParent));
+            // Dragging a selected entity reparents the whole selection.
+            std::vector<Entity> targets;
+            if (ctx.selection.contains(m_reparentChild) && ctx.selection.size() > 1)
+                targets.assign(ctx.selection.entities().begin(), ctx.selection.entities().end());
             else
-                SceneOps::reparent(scene, m_reparentChild, m_reparentParent);
+                targets = { m_reparentChild };
+
+            if (ctx.history) {
+                std::vector<std::unique_ptr<Command>> cmds;
+                for (Entity child : targets)
+                    cmds.push_back(Commands::reparent(scene, child, scene.getParent(child), m_reparentParent));
+                ctx.history->push(Commands::composite("Reparent", std::move(cmds)));
+            } else {
+                for (Entity child : targets) SceneOps::reparent(scene, child, m_reparentParent);
+            }
             ctx.dirty = true;
             m_hasReparent = false;
         }
@@ -153,17 +179,38 @@ void SceneHierarchyPanel::onImGuiRender(EditorContext& ctx) {
                 case Pending::CreateCamera:
                     if (ctx.history) ctx.history->push(Commands::create(scene, CK::Camera, m_pendingTarget, created));
                     break;
-                case Pending::Duplicate:
-                    if (ctx.history) ctx.history->push(Commands::duplicate(scene, m_pendingTarget, created));
+                case Pending::Duplicate: {
+                    // Operate on the whole selection if the target is part of it.
+                    std::vector<Entity> targets = targetsFor(ctx, m_pendingTarget);
+                    if (ctx.history) {
+                        std::vector<std::unique_ptr<Command>> cmds;
+                        std::vector<std::shared_ptr<Entity>> outs;
+                        for (Entity t : targets) {
+                            auto c = std::make_shared<Entity>(NULL_ENTITY);
+                            outs.push_back(c);
+                            cmds.push_back(Commands::duplicate(scene, t, c));
+                        }
+                        ctx.history->push(Commands::composite("Duplicate", std::move(cmds)));
+                        ctx.selection.clear();
+                        for (auto& c : outs) if (*c != NULL_ENTITY) ctx.selection.add(*c);
+                    }
                     break;
-                case Pending::Delete:
-                    if (ctx.selected == m_pendingTarget) ctx.selected = NULL_ENTITY;
-                    if (ctx.history) ctx.history->push(Commands::remove(scene, m_pendingTarget));
-                    else             scene.destroy(m_pendingTarget);
+                }
+                case Pending::Delete: {
+                    std::vector<Entity> targets = targetsFor(ctx, m_pendingTarget);
+                    for (Entity t : targets) ctx.selection.remove(t);
+                    if (ctx.history) {
+                        std::vector<std::unique_ptr<Command>> cmds;
+                        for (Entity t : targets) cmds.push_back(Commands::remove(scene, t));
+                        ctx.history->push(Commands::composite("Delete", std::move(cmds)));
+                    } else {
+                        for (Entity t : targets) scene.destroy(t);
+                    }
                     break;
+                }
                 case Pending::None: break;
             }
-            if (*created != NULL_ENTITY) ctx.selected = *created;
+            if (*created != NULL_ENTITY) ctx.selection.selectOnly(*created);
             ctx.dirty   = true;
             m_pending   = Pending::None;
         }

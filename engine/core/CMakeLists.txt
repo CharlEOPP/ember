@@ -3,7 +3,14 @@ add_library(ember_core STATIC
     src/Assert.cpp
     src/UUID.cpp
     src/Arena.cpp
+    src/Profiler.cpp
 )
+
+# Profiling is opt-in (zero-cost when off). PUBLIC so every module instrumented
+# with EMBER_PROFILE_SCOPE compiles the scopes in, and the editor sees the macro.
+if(EMBER_ENABLE_PROFILING)
+    target_compile_definitions(ember_core PUBLIC EMBER_ENABLE_PROFILING)
+endif()
 
 target_include_directories(ember_core
     PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/include

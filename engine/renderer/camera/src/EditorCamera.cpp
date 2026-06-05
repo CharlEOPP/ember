@@ -20,10 +20,10 @@ void EditorCamera::zoom(f32 amount) {
 }
 
 void EditorCamera::recompute() {
-    const glm::mat4 view = glm::inverse(glm::translate(glm::mat4(1.0f), glm::vec3(m_position, 0.0f)));
-    const glm::mat4 proj = glm::ortho(-m_halfHeight * m_aspect, m_halfHeight * m_aspect,
-                                      -m_halfHeight, m_halfHeight, -1.0f, 1.0f);
-    m_viewProjection = proj * view;
+    m_view = glm::inverse(glm::translate(glm::mat4(1.0f), glm::vec3(m_position, 0.0f)));
+    m_projection = glm::ortho(-m_halfHeight * m_aspect, m_halfHeight * m_aspect,
+                              -m_halfHeight, m_halfHeight, -1.0f, 1.0f);
+    m_viewProjection = m_projection * m_view;
 }
 
 } // namespace ember

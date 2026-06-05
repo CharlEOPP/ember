@@ -67,6 +67,18 @@ FetchContent_Declare(imgui
     GIT_SHALLOW    TRUE
 )
 
+# ---- ImGuizmo (transform gizmos) — editor only; 3D-native (Epic 08) ----
+# Non-shallow: a shallow clone of the moving 'master' tip was leaving the source
+# dir empty on some git setups. Full clone is tiny.
+# SOURCE_SUBDIR points at a non-existent dir so MakeAvailable POPULATES but does
+# NOT add_subdirectory ImGuizmo's own CMakeLists (which builds extra editors that
+# need imgui wired up). We compile just ImGuizmo.cpp ourselves (see editor/).
+FetchContent_Declare(imguizmo
+    GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
+    GIT_TAG        master
+    SOURCE_SUBDIR  _ember_no_build_
+)
+
 # ---- stb — image / font loading ----
 # NOTE: pinned to a raw commit SHA, so GIT_SHALLOW must stay OFF
 # (a shallow fetch only grabs the branch tip and can't check out an old SHA).
@@ -78,13 +90,14 @@ FetchContent_Declare(stb
 # Fetch everything (CMake parallelises the downloads)
 FetchContent_MakeAvailable(glfw glm EnTT spdlog yaml-cpp Catch2)
 
-# stb and imgui have no CMakeLists.txt, so MakeAvailable just populates them
-# (no add_subdirectory) and still sets stb_SOURCE_DIR / imgui_SOURCE_DIR.
-FetchContent_MakeAvailable(stb imgui)
+# stb / imgui / imguizmo have no CMakeLists.txt, so MakeAvailable just populates
+# them (no add_subdirectory) and sets *_SOURCE_DIR.
+FetchContent_MakeAvailable(stb imgui imguizmo)
 
-# Expose stb include path as a variable for targets that need it
+# Expose include paths as variables for targets that need them
 set(STB_INCLUDE_DIR "${stb_SOURCE_DIR}" CACHE PATH "stb include directory" FORCE)
 set(IMGUI_SOURCE_DIR "${imgui_SOURCE_DIR}" CACHE PATH "ImGui source directory" FORCE)
+set(IMGUIZMO_SOURCE_DIR "${imguizmo_SOURCE_DIR}" CACHE PATH "ImGuizmo source directory" FORCE)
 
 # Prevent glfw3.h from including the system OpenGL header; we use glad as the
 # sole GL loader. Without this, MinGW's <GL/gl.h> clashes with glad/gl.h.

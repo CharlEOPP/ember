@@ -4,6 +4,7 @@
 #include "ember/scene/Scene.h"
 #include "ember/ecs/World.h"
 #include "ember/ecs/Components.h"
+#include "ember/renderer/Tilemap.h"
 #include "ember/serialization/YAMLSerializer.h"
 
 #include <glm/glm.hpp>
@@ -73,6 +74,66 @@ std::unique_ptr<Command> setComponent(Scene& scene, Entity e, const InspectorEnt
     auto doFn   = [s, e, restore, after]  { restore(s->world(), e, after);  s->markTransformDirty(e); };
     auto undoFn = [s, e, restore, before] { restore(s->world(), e, before); s->markTransformDirty(e); };
     return std::make_unique<FunctionalCommand>("Edit " + entry.name, std::move(doFn), std::move(undoFn));
+}
+
+std::unique_ptr<Command> transformEntities(Scene& scene,
+                                           std::vector<EntityXform> before,
+                                           std::vector<EntityXform> after) {
+    Scene* s = &scene;
+    auto apply = [s](const std::vector<EntityXform>& states) {
+        for (const EntityXform& x : states)
+            if (Transform* t = s->world().tryGet<Transform>(x.e)) {
+                *t = x.transform;
+                s->markTransformDirty(x.e);
+            }
+    };
+    auto doFn   = [apply, after]  { apply(after); };
+    auto undoFn = [apply, before] { apply(before); };
+    return std::make_unique<FunctionalCommand>("Transform", std::move(doFn), std::move(undoFn));
+}
+
+std::unique_ptr<Command> setComponentBatch(Scene& scene, const InspectorEntry& entry,
+                                           std::vector<Entity> entities,
+                                           std::vector<std::shared_ptr<void>> before,
+                                           std::vector<std::shared_ptr<void>> after) {
+    Scene* s = &scene;
+    auto restore = entry.restore;
+    auto apply = [s, restore, entities](const std::vector<std::shared_ptr<void>>& states) {
+        for (std::size_t i = 0; i < entities.size() && i < states.size(); ++i)
+            if (s->world().valid(entities[i])) {
+                restore(s->world(), entities[i], states[i]);
+                s->markTransformDirty(entities[i]);
+            }
+    };
+    auto doFn   = [apply, after]  { apply(after); };
+    auto undoFn = [apply, before] { apply(before); };
+    return std::make_unique<FunctionalCommand>("Edit " + entry.name + " (batch)",
+                                               std::move(doFn), std::move(undoFn));
+}
+
+std::unique_ptr<Command> paintTiles(Scene& scene, Entity tilemapEntity, std::vector<TileEdit> edits) {
+    Scene* s = &scene;
+    Entity te = tilemapEntity;
+    auto doFn = [s, te, edits] {
+        if (Tilemap* tm = s->world().tryGet<Tilemap>(te))
+            for (const TileEdit& ed : edits) tm->setTile(ed.x, ed.y, ed.newId);
+    };
+    auto undoFn = [s, te, edits] {
+        if (Tilemap* tm = s->world().tryGet<Tilemap>(te))
+            for (const TileEdit& ed : edits) tm->setTile(ed.x, ed.y, ed.oldId);
+    };
+    return std::make_unique<FunctionalCommand>("Paint Tiles", std::move(doFn), std::move(undoFn));
+}
+
+std::unique_ptr<Command> composite(std::string name, std::vector<std::unique_ptr<Command>> cmds) {
+    auto box = std::make_shared<std::vector<std::unique_ptr<Command>>>(std::move(cmds));
+    auto doFn = [box] {
+        for (auto& c : *box) c->execute();
+    };
+    auto undoFn = [box] {
+        for (auto it = box->rbegin(); it != box->rend(); ++it) (*it)->undo();
+    };
+    return std::make_unique<FunctionalCommand>(std::move(name), std::move(doFn), std::move(undoFn));
 }
 
 } // namespace ember::Commands

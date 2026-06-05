@@ -10,6 +10,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # time. Enable with -DEMBER_ENABLE_AUDIO=ON to build the AudioClip loader.
 option(EMBER_ENABLE_AUDIO "Build the miniaudio-based audio loader" OFF)
 
+# Profiling (EMBER_PROFILE_SCOPE) is opt-in and zero-cost when off.
+option(EMBER_ENABLE_PROFILING "Enable EMBER_PROFILE_SCOPE instrumentation" OFF)
+
 # ---- CMake modules ----
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 

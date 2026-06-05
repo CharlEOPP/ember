@@ -10,6 +10,7 @@
 #include "ember/ecs/Components.h"
 #include "ember/ecs/ComponentRegistry.h"
 #include "ember/ecs/Reflect.h"
+#include "ember/scene/PrefabInstance.h"
 #include "ember/core/Log.h"
 
 #include <entt/entt.hpp>
@@ -35,6 +36,7 @@ inline void ensureRegistered() {
     reg.registerComponent(makeMeta<Tag>("Tag"));
     reg.registerComponent(makeMeta<Parent>("Parent"));
     reg.registerComponent(makeMeta<Children>("Children"));
+    reg.registerComponent(makeMeta<PrefabInstance>("PrefabInstance"));
 }
 
 // ---- Entity emit / load helpers (shared by scene + prefab) ----

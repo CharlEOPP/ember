@@ -1,7 +1,13 @@
 #include "AssetBrowserPanel.h"
 
+#include "ember/assets/ImportSettings.h"
+#include "ember/assets/AssetDatabase.h"
+#include "ember/assets/AssetManager.h"
+#include "ember/assets/Texture2D.h"
+
 #include <imgui.h>
 #include <algorithm>
+#include <cstdio>
 #include <system_error>
 #include <vector>
 
@@ -64,7 +70,8 @@ void AssetBrowserPanel::onImGuiRender(EditorContext& ctx) {
         const std::string full  = f.path().string();
         const bool isScene = f.path().extension() == ".escene";
 
-        ImGui::Selectable(fname.c_str());
+        if (ImGui::Selectable(fname.c_str(), m_selectedFile == f.path()))
+            m_selectedFile = f.path();
 
         // Drag source: full path, consumed by Inspector asset fields.
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
@@ -86,6 +93,62 @@ void AssetBrowserPanel::onImGuiRender(EditorContext& ctx) {
         }
     }
     ImGui::EndChild();
+
+    // ---- Import settings for the selected texture/font (.meta editor) ----
+    if (!m_selectedFile.empty() && fs::exists(m_selectedFile, ec)) {
+        const std::string extn = m_selectedFile.extension().string();
+        const bool isTex  = (extn == ".png" || extn == ".jpg" || extn == ".jpeg");
+        const bool isFont = (extn == ".ttf" || extn == ".otf");
+        if (isTex || isFont) {
+            ImGui::Separator();
+            ImGui::Text("Import: %s", m_selectedFile.filename().string().c_str());
+
+            const fs::path metaPath = m_selectedFile.string() + ".meta";
+            AssetMeta meta;
+            if (auto m = AssetDatabase::readMeta(metaPath)) meta = *m;
+
+            auto reimport = [&](const char* type, const char* importer) {
+                if (meta.type.empty())     meta.type     = type;
+                if (meta.importer.empty()) meta.importer = importer;
+                AssetDatabase::writeMeta(metaPath, meta);
+                if (ctx.assets) {
+                    const std::string vpath = fs::relative(m_selectedFile, m_root, ec).generic_string();
+                    if (isTex) ctx.assets->reload(ctx.assets->load<Texture2D>(vpath));
+                }
+            };
+
+            if (isTex) {
+                TextureImportSettings ts = TextureImportSettings::fromSettings(meta.settings);
+                int filter = static_cast<int>(ts.filter);
+                int wrap   = static_cast<int>(ts.wrap);
+                int format = static_cast<int>(ts.format);
+                ImGui::Combo("filter", &filter, "Nearest\0Linear\0");
+                ImGui::Combo("wrap",   &wrap,   "Repeat\0ClampToEdge\0");
+                ImGui::Combo("format", &format, "RGBA8\0RGB8\0R8\0");
+                ImGui::Checkbox("generate mips", &ts.generateMips);
+                ImGui::InputInt("max size", &ts.maxSize);
+                ts.filter = static_cast<TextureFilter>(filter);
+                ts.wrap   = static_cast<TextureWrap>(wrap);
+                ts.format = static_cast<TextureFormat>(format);
+                if (ImGui::Button("Apply & Re-import")) {
+                    meta.settings = ts.toSettings();
+                    reimport("Texture2D", "Texture2DLoader");
+                }
+            } else {
+                FontImportSettings fset = FontImportSettings::fromSettings(meta.settings);
+                static char sizes[128];
+                std::string cur;
+                for (std::size_t i = 0; i < fset.sizes.size(); ++i) { if (i) cur += ','; cur += std::to_string(fset.sizes[i]); }
+                std::snprintf(sizes, sizeof(sizes), "%s", cur.c_str());
+                if (ImGui::InputText("sizes", sizes, sizeof(sizes))) {}
+                if (ImGui::Button("Apply & Re-import")) {
+                    AssetSettings s; s.kv["sizes"] = sizes;
+                    meta.settings = s;
+                    reimport("FontAsset", "FontLoader");
+                }
+            }
+        }
+    }
 
     // Deferred delete with confirm.
     if (!m_pendingDelete.empty()) {

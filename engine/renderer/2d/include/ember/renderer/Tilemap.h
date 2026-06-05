@@ -45,6 +45,24 @@ struct Tilemap {
         return (x < width && y < height) ? tiles[static_cast<usize>(y) * width + x] : 0u;
     }
     [[nodiscard]] bool isSolid(u32 x, u32 y) const { return at(x, y) != 0u; }
+
+    // Write a tile id at (x,y); ignored if out of bounds. (Editor painting.)
+    void setTile(u32 x, u32 y, u32 id) {
+        if (x < width && y < height) tiles[static_cast<usize>(y) * width + x] = id;
+    }
+
+    // Resize the grid, preserving overlapping cells; new cells are empty (0).
+    void resize(u32 newW, u32 newH) {
+        std::vector<u32> next(static_cast<usize>(newW) * newH, 0u);
+        const u32 cw = newW < width ? newW : width;
+        const u32 ch = newH < height ? newH : height;
+        for (u32 y = 0; y < ch; ++y)
+            for (u32 x = 0; x < cw; ++x)
+                next[static_cast<usize>(y) * newW + x] = tiles[static_cast<usize>(y) * width + x];
+        tiles = std::move(next);
+        width = newW;
+        height = newH;
+    }
 };
 
 } // namespace ember

@@ -4,6 +4,9 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#ifdef EMBER_HAS_IMGUIZMO
+#include <ImGuizmo.h>
+#endif
 #include <GLFW/glfw3.h>
 
 #include <filesystem>
@@ -39,6 +42,9 @@ void ImGuiLayer::begin() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+#ifdef EMBER_HAS_IMGUIZMO
+    ImGuizmo::BeginFrame();
+#endif
 }
 
 void ImGuiLayer::end(Window& window) {
@@ -54,6 +60,18 @@ void ImGuiLayer::end(Window& window) {
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
         glfwMakeContextCurrent(backup);
+    }
+}
+
+void ImGuiLayer::applyTheme(int theme) {
+    if (theme == 1)      ImGui::StyleColorsLight();
+    else if (theme == 2) ImGui::StyleColorsClassic();
+    else                 ImGui::StyleColorsDark();
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        style.WindowRounding              = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 }
 

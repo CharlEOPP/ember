@@ -4,6 +4,7 @@
 
 #include "ember/ecs/World.h"
 #include "ember/ecs/Components.h"
+#include "ember/scene/PrefabInstance.h"
 #include "ember/renderer/Components2D.h"
 #include "ember/renderer/SpriteAnimation.h"
 #include "ember/renderer/ParticleEmitter.h"
@@ -86,6 +87,7 @@ void registerEditorInspectors() {
     registerInspector<RigidBody2D>("RigidBody2D", drawReflected<RigidBody2D>);
     registerInspector<BoxCollider2D>("BoxCollider2D", drawReflected<BoxCollider2D>);
     registerInspector<CircleCollider2D>("CircleCollider2D", drawReflected<CircleCollider2D>);
+    registerInspector<PrefabInstance>("PrefabInstance", drawReflected<PrefabInstance>);
 }
 
 } // namespace ember
