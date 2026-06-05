@@ -25,6 +25,7 @@ bool EditorSettings::load(const std::string& path) {
         const std::string val = trim(line.substr(colon + 1));
         try {
             if      (key == "theme")            theme            = std::stoi(val);
+            else if (key == "uiScale")          uiScale          = std::stof(val);
             else if (key == "gridSnap")         gridSnap         = std::stof(val);
             else if (key == "rotateSnap")       rotateSnap       = std::stof(val);
             else if (key == "cameraPanSpeed")   cameraPanSpeed   = std::stof(val);
@@ -40,6 +41,7 @@ bool EditorSettings::save(const std::string& path) const {
     std::ofstream f(path);
     if (!f) return false;
     f << "theme: "            << theme            << '\n'
+      << "uiScale: "          << uiScale          << '\n'
       << "gridSnap: "         << gridSnap         << '\n'
       << "rotateSnap: "       << rotateSnap       << '\n'
       << "cameraPanSpeed: "   << cameraPanSpeed   << '\n'

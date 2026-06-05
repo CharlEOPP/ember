@@ -14,6 +14,7 @@ public:
     void shutdown();
 
     void applyTheme(int theme);   // 0 Dark, 1 Light, 2 Classic
+    void setUiScale(float scale); // live UI scale on top of DPI (FontGlobalScale)
 
     [[nodiscard]] bool initialized() const { return m_initialized; }
 

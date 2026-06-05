@@ -12,6 +12,7 @@ bool EditorSettingsPanel::onImGuiRender(EditorSettings& s, bool& open) {
     bool changed = false;
     if (ImGui::Begin("Preferences", &open)) {
         changed |= ImGui::Combo("Theme", &s.theme, "Dark\0Light\0Classic\0");
+        changed |= ImGui::DragFloat("UI scale", &s.uiScale, 0.05f, 0.5f, 3.0f, "%.2f");
         ImGui::SeparatorText("Gizmo snap");
         changed |= ImGui::DragFloat("Grid snap",   &s.gridSnap,   0.05f, 0.0f, 100.0f);
         changed |= ImGui::DragFloat("Rotate snap", &s.rotateSnap, 0.5f,  0.0f, 180.0f);

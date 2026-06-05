@@ -387,6 +387,7 @@ void EditorApplication::revertPrefab(Entity instance) {
 
 void EditorApplication::applySettings() {
     m_imgui.applyTheme(m_settings.theme);
+    m_imgui.setUiScale(m_settings.uiScale);
     m_viewport.setSnap(m_settings.gridSnap, m_settings.rotateSnap);
     m_viewport.setCameraSpeeds(m_settings.cameraPanSpeed, m_settings.cameraZoomSpeed);
 }

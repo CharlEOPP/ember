@@ -7,6 +7,7 @@ namespace ember {
 // editor). ImGui-free + in ember_editor_core so it's unit-testable.
 struct EditorSettings {
     int   theme            = 0;      // 0 Dark, 1 Light, 2 Classic
+    float uiScale          = 1.0f;   // extra UI scale on top of monitor DPI
     float gridSnap         = 1.0f;   // gizmo Ctrl-snap grid (world units)
     float rotateSnap       = 15.0f;  // gizmo Ctrl-snap angle (degrees)
     float cameraPanSpeed   = 1.0f;

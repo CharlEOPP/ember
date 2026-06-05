@@ -22,20 +22,45 @@ void ImGuiLayer::init(Window& window) {
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     io.IniFilename  = "editor/layout.ini";   // persisted dockspace layout
 
-    // Default font: JetBrains Mono if present, else the built-in font.
+    // Scale the UI to the monitor's DPI so text stays readable at high resolution
+    // / fullscreen. Font is rasterized at the scaled size for crispness; widget
+    // metrics are scaled to match.
+    float xscale = 1.0f, yscale = 1.0f;
+    glfwGetWindowContentScale(window.getNativeHandle(), &xscale, &yscale);
+    const float dpi = (xscale > 0.0f) ? xscale : 1.0f;
+    const float fontSize = 16.0f * dpi;   // base 16px (up from 14) × DPI
+
     if (std::filesystem::exists("assets/fonts/JetBrainsMono-Regular.ttf"))
-        io.Fonts->AddFontFromFileTTF("assets/fonts/JetBrainsMono-Regular.ttf", 14.0f);
+        io.Fonts->AddFontFromFileTTF("assets/fonts/JetBrainsMono-Regular.ttf", fontSize);
+    else
+        io.FontGlobalScale = dpi;   // built-in font: scale up instead
 
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
+
+    // Light cleanup pass: rounded corners + a bit more breathing room.
+    style.FrameRounding     = 4.0f;
+    style.GrabRounding      = 4.0f;
+    style.TabRounding       = 4.0f;
+    style.ScrollbarRounding = 4.0f;
+    style.WindowRounding    = 6.0f;
+    style.FramePadding      = ImVec2(6.0f, 4.0f);
+    style.ItemSpacing       = ImVec2(8.0f, 6.0f);
+    style.WindowPadding     = ImVec2(8.0f, 8.0f);
+    style.ScaleAllSizes(dpi);   // DPI-scale all of the above
+
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-        style.WindowRounding              = 0.0f;
+        style.WindowRounding              = 0.0f;   // OS-window children need square corners
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
     ImGui_ImplGlfw_InitForOpenGL(window.getNativeHandle(), true);
     ImGui_ImplOpenGL3_Init("#version 410");
     m_initialized = true;
+}
+
+void ImGuiLayer::setUiScale(float scale) {
+    ImGui::GetIO().FontGlobalScale = (scale > 0.0f) ? scale : 1.0f;
 }
 
 void ImGuiLayer::begin() {
